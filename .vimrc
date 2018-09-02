@@ -87,10 +87,6 @@ set completeopt-=preview
 set backspace=indent,eol,start
 
 
-
-let g:UltiSnipsExpandTrigger="<tab>"
-let g:UltiSnipsJumpForwardTrigger="<tab>"
-let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
 " If you want :UltiSnipsEdit to split your window.
 let g:UltiSnipsEditSplit="vertical"
 
@@ -121,13 +117,13 @@ if !exists('g:neocomplete#sources#omni#input_patterns')
   let g:neocomplete#sources#omni#input_patterns = {}
 endif
 "let g:neocomplete#sources#omni#input_patterns.php '=[^. \t->\h\w*\|\h\w*::'
-let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] \t\%(\.\|->\)'
+let g:neocomplete#sources#omni#input_patterns.c = '[^.[:digit:] *\t]\%(\.\|->\)'
 "let g:neocomplete#sources#omni#input_patterns.cpp ='[^.[:digit:] *\t]\%(\.\|\-)\|\h\w*:'
 
 
 
 "for rainbow plugin
-au FileType c,cp,obj,objcpp call rainbow#load()
+au FileType c,cpp,objc,objcpp call rainbow#load()
 
 "setting for syntaxcomplete => setup syntaxcomplete for every filetype
 if has("autocmd") && exists("+omnifunc")
@@ -191,6 +187,7 @@ let g:ycm_complete_in_comments = 1
 let g:ycm_collect_identifiers_from_comments_and_strings = 1
 let g:ycm_seed_identifiers_with_sytax = 1 "기본값은 2이며 문자가넘어오면 자동으로시작
 let g:ycm_auto_trigger = 1 "YCM이 자동으로시작할지ctrl + space로 시작할지
+let g:ycm_min_num_of_chars_for_completion = 1 
 let g:ycm_server_keep_logfiles = 1
 let g:ycm_server_log_level ='debug'
 let g:ycm_collect_identifiers_from_tags_files = 1 " tags 파일을 사용합니다. 성능상 이익이 있는걸로 알고있습니다.
@@ -207,8 +204,8 @@ let g:ycm_filetype_blacklist = {
 "[NERDTree setting defaults to work around]
 " http://github.com/scrooloose/nerdtree/issues/489
 let g:NERDTreeDirArrows = 1
-let g:NERDTreeDirArrowExpandable = '?'
-let g:NERDTreeDirArrowCollapsible = '?'
+let g:NERDTreeDirArrowExpandable = '▸'
+let g:NERDTreeDirArrowCollapsible = '◂'
 let g:NERDTreeGlyphReadOnly = "RO"
 
 "
@@ -255,7 +252,7 @@ colorscheme solarized
 set t_Co=256
 let g:mwDefaultHighlightingPalette = 'maximum'
 set background=dark
-let g:solarzedterm_colors=256
+let g:solarized_termcolors=256
 
 set autoindent
 set cindent
@@ -277,7 +274,7 @@ highlight Visual ctermfg=3
 "[CTag settings]
 "[CTag settings]
 "[CTag settings]
-set tag=./tags;,tags;
+set tags=./tags;
 "하위로 이동하면서 tag찾기
 function SetTags()
     let curdir = getcwd()
