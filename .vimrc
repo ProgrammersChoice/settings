@@ -26,7 +26,7 @@ Plug 'tpope/vim-unimpaired' "to navigate quickfix buffer
 "vim complain about [q and ]q). So the workflow is:
 ":
 Plug 'scrooloose/syntastic' "code error conventions
-Plug 'ctrlpvim/ctrlp.vim' "[ctrl+p] 파일 찾기, [C-p] [C-t] [C-v] [C-x]
+"Plug 'ctrlpvim/ctrlp.vim' "[ctrl+p] 파일 찾기, [C-p] [C-t] [C-v] [C-x]
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' "Rg, Files, Lines, Commits //cfdo %s///g|update
 Plug 'airblade/vim-rooter'
@@ -117,6 +117,14 @@ if exists('+termguicolors')
 endif
 
 
+"WSL yank support
+let s:clip = '/mnt/c/Windows/System32/clip.exe'  " change this path according to your mount point
+if executable(s:clip)
+    augroup WSLYank
+        autocmd!
+        autocmd TextYankPost * if v:event.operator ==# 'y' | call system(s:clip, @0) | endif
+    augroup END
+endif
 
 """""""""""""""""[PLUG Options]""""""""""""""""
 """""""""""""""""[PLUG Options]""""""""""""""""
