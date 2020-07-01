@@ -11,6 +11,7 @@ call plug#begin('~/.vim/plugged')
 " let Vundle manage Vundle, required
 " Search [:PlugSearch]  install is [:PlugInstall]  [PlugUpdate]to delete erase from here and type [:PlugClean]
 Plug 'scrooloose/nerdtree', { 'on': 'NERDTreeToggle' }
+Plug 'ryanoasis/vim-devicons'
 Plug 'vim-airline/vim-airline' "bottom line pretty
 Plug 'vim-airline/vim-airline-themes' "bottom line pretty
 Plug 'airblade/vim-gitgutter' "see the changes for git
@@ -73,7 +74,9 @@ call plug#end()
 """"""""""""""""[general Vim Settings]""""""""""""""""
 """"""""""""""""[general Vim Settings]""""""""""""""""
 """"""""""""""""[general Vim Settings]""""""""""""""""
-
+set mouse=a
+set paste
+set encoding=UTF-8
 set cb=unnamed " 윈도우에서 복사하기 위해 *레지스터 이용 +가 기본
 set nocompatible              " be improved, required
 filetype off                  " required
@@ -359,8 +362,8 @@ let g:NERDTreeGlyphReadOnly = "RO"
 let NERDTreeWinPos ="right"
 nmap <F7> :TlistToggle<CR>
 nmap <F8> :SrcExplToggle<CR>
-"nmap <F9> :NERDTreeToggle<CR>
-nmap <F9> :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
+nmap <F9> :NERDTreeToggle<CR>
+"nmap <F9> :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 "nmap ,m :NERDTreeToggle<CR>
 ""tabsize  ls명령이 파일 버퍼들 보는것임
 "map ,1 :b!1<CR> "1번 파일 버퍼로 이동 
@@ -458,7 +461,7 @@ endfunction
 autocmd CursorHold * silent call CocActionAsync('highlight')
 
 " Symbol renaming.
-nmap <leader>rn <Plug>(coc-rename)
+nmap <F2> <Plug>(coc-rename)
 
 " Formatting selected code.
 xmap <leader>f  <Plug>(coc-format-selected)
@@ -513,20 +516,51 @@ command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organize
 set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
 
 " Mappings for CoCList
-" Show all diagnostics.
-nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
-" Manage extensions.
-nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
-" Show commands.
-nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
-" Find symbol of current document.
-nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
-" Search workspace symbols.
-nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
-" Do default action for next item.
-nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
-" Do default action for previous item.
-nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
-" Resume latest coc list.
-nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
+" show all diagnostics.
+nnoremap <silent><nowait> <space>a  :<c-u>coclist diagnostics<cr>
+" manage extensions.
+nnoremap <silent><nowait> <space>e  :<c-u>coclist extensions<cr>
+" show commands.
+nnoremap <silent><nowait> <space>c  :<c-u>coclist commands<cr>
+" find symbol of current document.
+nnoremap <silent><nowait> <space>o  :<c-u>coclist outline<cr>
+" search workspace symbols.
+nnoremap <silent><nowait> <space>s  :<c-u>coclist -i symbols<cr>
+" do default action for next item.
+nnoremap <silent><nowait> <space>j  :<c-u>cocnext<cr>
+" do default action for previous item.
+nnoremap <silent><nowait> <space>k  :<c-u>cocprev<cr>
+" resume latest coc list.
+nnoremap <silent><nowait> <space>p  :<c-u>coclistresume<cr>
 
+function! FloatScroll(forward) abort
+  let float = coc#util#get_float()
+  if !float | return '' | endif
+  let buf = nvim_win_get_buf(float)
+  let buf_height = nvim_buf_line_count(buf)
+  let win_height = nvim_win_get_height(float)
+  if buf_height < win_height | return '' | endif
+  let pos = nvim_win_get_cursor(float)
+  if a:forward
+    if pos[0] == 1
+      let pos[0] += 3 * win_height / 4
+    elseif pos[0] + win_height / 2 + 1 < buf_height
+      let pos[0] += win_height / 2 + 1
+    else
+      let pos[0] = buf_height
+    endif
+  else
+    if pos[0] == buf_height
+      let pos[0] -= 3 * win_height / 4
+    elseif pos[0] - win_height / 2 + 1  > 1
+      let pos[0] -= win_height / 2 + 1
+    else
+      let pos[0] = 1
+    endif
+  endif
+  call nvim_win_set_cursor(float, pos)
+  return ''
+endfunction
+
+inoremap <silent><expr> <down> coc#util#has_float() ? FloatScroll(1) : "\<down>"
+inoremap <silent><expr>  <up>  coc#util#has_float() ? FloatScroll(0) :  "\<up>"

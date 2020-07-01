@@ -1,0 +1,9 @@
+{
+    "coc.preferences.formatOnSaveFiletypes": ["python"],
+    "python.linting.enabled": true,
+    "python.linting.flake8Enabled": true,
+    "python.venvPath": "/home/hongiee/py3env/",
+    "python.formatting.provider": "black",
+    "python.pythonPath": "/home/hongiee/py3env/bin/python"
+}
+
