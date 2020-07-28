@@ -22,5 +22,6 @@ sudo apt install fd-find
 sudo apt-get install silversearcher-ag
 sudo apt-get install ripgrep universal-ctags
 sudo apt-get install fd-find
+sudo apt-get install -y xclip
 sudo apt install bat
 sudo ln -s /usr/bin/batcat /usr/bin/bat
