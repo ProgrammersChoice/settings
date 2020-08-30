@@ -30,6 +30,9 @@ Plug 'scrooloose/syntastic' "code error conventions
 "Plug 'ctrlpvim/ctrlp.vim' "[ctrl+p] 파일 찾기, [C-p] [C-t] [C-v] [C-x]
 Plug 'junegunn/fzf', { 'do': { -> fzf#install() } }
 Plug 'junegunn/fzf.vim' "Rg, Files, Lines, Commits //cfdo %s///g|update
+Plug 'pechorin/any-jump.vim'
+Plug 'dyng/ctrlsf.vim'
+Plug 'stsewd/fzf-checkout.vim'
 Plug 'airblade/vim-rooter'
 Plug 'rking/ag.vim' "v, h, t, go
 Plug 'mileszs/ack.vim'
@@ -40,6 +43,7 @@ Plug 'oblitum/rainbow' "different color () [rainbowtoggle]
 Plug 'tpope/vim-commentary' "쉬운 주석  [gcap],[gcc], [선택 gc] , [7,17Commentary], [g/TODO/Commentary]
 "Plug 'christoomey/vim-tmux-navigator'
 "Plug 'taglist-plus'
+Plug 'majutsushi/tagbar'
 Plug 'wesleyche/SrcExpl'
 Plug 'tpope/vim-repeat'
 Plug 'Yggdroot/vim-mark' "색칠 [\m] [\n]
@@ -62,7 +66,7 @@ Plug 'hanschen/vim-ipython-cell', { 'for': 'python' }
 "Plug 'Rip-Rip/clang_complete'
 
 "[color scheme]
-" vimcolors.com   
+" vimcolors.com
 "Plug 'flazz/vim-colorschemes' "각종 컬러
 "Plug 'altercation/vim-colors-solarized'
 "Plug 'desert-warm-256'
@@ -77,8 +81,14 @@ call plug#end()
 """"""""""""""""[general Vim Settings]""""""""""""""""
 """"""""""""""""[general Vim Settings]""""""""""""""""
 """"""""""""""""[general Vim Settings]""""""""""""""""
+imap kj <Esc>
+command! Config execute ":e ~/.vimrc"
+command! Reload execute ":source ~/.vimrc"
+command! FileHistory execute ":BCommits"
+nmap com :Commands<CR>
+nnoremap <leader>j :AnyJump<CR>
 set mouse=a
-set paste
+set nopaste
 set encoding=UTF-8
 set cb=unnamed " 윈도우에서 복사하기 위해 *레지스터 이용 +가 기본
 set nocompatible              " be improved, required
@@ -105,7 +115,6 @@ set sts=4
 set backspace=indent,eol,start
 "set cc=80
 set hlsearch
-imap kj <Esc>
 "highlight Visual cterm=NONE ctermbg=3 ctermfg=1 guibg=Grey40
 highlight ColorColumn ctermbg=6 guibg=LightSeaGreen
 highlight Visual ctermfg=3
@@ -153,7 +162,7 @@ let g:slime_dont_ask_default = 1
 " map <Leader>s to start IPython
 nnoremap <Leader>s :SlimeSend1 ipython --matplotlib<CR>
 " map <Leader>r to run script
-nnoremap <Leader>e :IPythonCellRun<CR>
+"nnoremap <Leader>e :IPythonCellRun<CR>
 " map <Leader>R to run script and time the execution
 nnoremap <Leader>E :IPythonCellRunTime<CR>
 " map <Leader>c to execute the current cell
@@ -163,16 +172,16 @@ nnoremap <Leader>E :IPythonCellRunTime<CR>
 " map <Leader>l to clear IPython screen
 nnoremap <Leader>c :IPythonCellClear<CR>
 " map <Leader>x to close all Matplotlib figure windows
-nnoremap <Leader>x :IPythonCellClose<CR>
+"nnoremap <Leader>x :IPythonCellClose<CR>
 
 " map [c and ]c to jump to the previous and next cell header
-nnoremap [c :IPythonCellPrevCell<CR>
-nnoremap ]c :IPythonCellNextCell<CR>
+"nnoremap [c :IPythonCellPrevCell<CR>
+"nnoremap ]c :IPythonCellNextCell<CR>
 " map <Leader>h to send the current line or current selection to IPython
-nmap <Leader>h <Plug>SlimeLineSend
-xmap <Leader>h <Plug>SlimeRegionSend
+nmap <Leader>e <Plug>SlimeLineSend
+xmap <Leader>e <Plug>SlimeRegionSend
 " map <Leader>p to run the previous command
-nnoremap <Leader>p :IPythonCellPrevCommand<CR>
+"nnoremap <Leader>p :IPythonCellPrevCommand<CR>
 " map <Leader>Q to restart ipython
 nnoremap <Leader>Q :IPythonCellRestart<CR>
 " map <Leader>d to start debug mode
@@ -183,7 +192,11 @@ nnoremap <Leader>q :SlimeSend1 exit<CR>
 """"[fzf]""""
 """"[fzf]""""
 nnoremap <C-p> :GFiles<Cr>
-nnoremap <C-g> :Rg<Cr>
+nmap ?? :Rg<Cr>
+nmap // :BLines<Cr>
+let g:fzf_layout = { 'window' : { 'width': 0.8, 'height': 0.8 } }
+let $FZF_DEFAULT_OPTS='--reverse'
+nnoremap <leader>gc :GCheckout<CR>
 
 
 """"[airline]""""
@@ -239,14 +252,14 @@ if executable('ag')
     let g:ackprg = "ag --vimgrep"
     let g:ctrlp_user_command = 'ag %s -l --nocolor -g ""'
 endif
-"nnoremap ,ag :Ag! --ignore tags --ignore cscope.out  
+"nnoremap ,ag :Ag! --ignore tags --ignore cscope.out
 "nnoremap ,ac :Ag!
 
 
 "[settings for ultisnips]""""
 "[settings for ultisnips]""""
 ":UltiSnipsEdit is make custom stnips for that workspace
-" "Trigger configuratio. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe. 
+" "Trigger configuratio. Do not use <tab> if you use https://github.com/Valloric/YouCompleteMe.
 let g:UltiSnipsExpandTrigger="<tab>"
 let g:UltiSnipsJumpForwardTrigger="<tab>"
 let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
@@ -254,8 +267,8 @@ let g:UltiSnipsJumpBackwardTrigger="<s-tab>"
 let g:UltiSnipsMappingsToIgnore = ['autocomplete']
 " If you want :UltiSnipsEdit to split your window.
 let g:UltiSnipsEditSplit="vertical"
-  
-                
+
+
 "[air line top]""""
 "[air line top]""""
 let g:airline#extensions#tabline#enabled = 1
@@ -398,7 +411,25 @@ function! Maketags()
 	call system("/home/hongiee/ctag.sh")
 endfunction
 "nmap ,tag :call Maketags()<CR>
+"
+"[set paste]""""
+let g:paste = 1
+function! Togglepaste()
+    if g:paste
+	set mouse=
+	set paste
+    else
+	set mouse=a
+	set nopaste
+    endif
+    let g:paste = !g:paste
+endfunction
+" augroup Whitespace
+"     autocmd!
+"     autocmd BufEnter,WinEnter * call Whitespace()
+" augroup END
 
+nmap <F10> :call Togglepaste()<CR>
 
 "[NERD Tree]""""
 "[NERD Tree]""""
@@ -406,26 +437,48 @@ let g:NERDTreeDirArrows = 1
 let g:NERDTreeDirArrowExpandable = '?'
 let g:NERDTreeDirArrowCollapsible = '?'
 let g:NERDTreeGlyphReadOnly = "RO"
-let NERDTreeWinPos ="right"
-nmap <F7> :TlistToggle<CR>
+let NERDTreeWinPos ="left"
+nmap <F7> :NERDTreeToggle<CR>
 nmap <F8> :SrcExplToggle<CR>
-nmap <F9> :NERDTreeToggle<CR>
+nmap <F9> :TagbarToggle<CR>
 "nmap <F9> :wincmd v<bar> :Ex <bar> :vertical resize 30<CR>
 "nmap ,m :NERDTreeToggle<CR>
 ""tabsize  ls명령이 파일 버퍼들 보는것임
-"map ,1 :b!1<CR> "1번 파일 버퍼로 이동 
-"map ,2 :b!2<CR> 
-"map ,3 :b!3<CR> 
-"map ,4 :b!4<CR> 
-"map ,5 :b!5<CR> 
-"map ,6 :b!6<CR> 
-"map ,7 :b!7<CR> 
-"map ,8 :b!8<CR> 
-"map ,9 :b!9<CR> 
-"map ,0 :b!0<CR> 
-"map ,x :bn!<CR>  "다음 파일 버퍼 
-"map ,y :bp!<CR> 
+"map ,1 :b!1<CR> "1번 파일 버퍼로 이동
+"map ,2 :b!2<CR>
+"map ,3 :b!3<CR>
+"map ,4 :b!4<CR>
+"map ,5 :b!5<CR>
+"map ,6 :b!6<CR>
+"map ,7 :b!7<CR>
+"map ,8 :b!8<CR>
+"map ,9 :b!9<CR>
+"map ,0 :b!0<CR>
+"map ,x :bn!<CR>  "다음 파일 버퍼
+"map ,y :bp!<CR>
 "map ,w :bw<CR>  "현재 파일 버퍼를 닫음
+
+"[CtrlSF]""""
+"[CtrlSF]""""
+nmap <leader>a :CtrlSF -R ""<Left>
+nmap <leader>A <Plug>CtrlSFCwordPath -W<CR>
+nmap <leader>c :CtrlSFFocus<CR>
+nmap <leader>C :CtrlSFToggle<CR>
+" Substitute the word under the cursor.
+nmap <leader>s :%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>
+
+if has("macunix")
+  let g:ctrlsf_ackprg = '/usr/local/bin/rg'
+elseif has("unix")
+  let g:ctrlsf_ackprg = '/usr/bin/rg'
+endif
+
+let g:ctrlsf_winsize = '33%'
+let g:ctrlsf_auto_close = 0
+let g:ctrlsf_confirm_save = 0
+let g:ctrlsf_auto_focus = {
+    \ 'at': 'start',
+    \ }
 
 
 "[coc]""""
