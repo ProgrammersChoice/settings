@@ -82,6 +82,7 @@ call plug#end()
 """"""""""""""""[general Vim Settings]""""""""""""""""
 """"""""""""""""[general Vim Settings]""""""""""""""""
 imap kj <Esc>
+nnoremap zz :q!<CR>
 command! Config execute ":e ~/.vimrc"
 command! Reload execute ":source ~/.vimrc"
 command! FileHistory execute ":BCommits"
@@ -160,7 +161,7 @@ let g:slime_dont_ask_default = 1
 " Keyboard mappings. <Leader> is \ (backslash) by default
 
 " map <Leader>s to start IPython
-nnoremap <Leader>s :SlimeSend1 ipython --matplotlib<CR>
+nnoremap <Leader>start :SlimeSend1 ipython --matplotlib<CR>
 " map <Leader>r to run script
 "nnoremap <Leader>e :IPythonCellRun<CR>
 " map <Leader>R to run script and time the execution
@@ -188,6 +189,11 @@ nnoremap <Leader>Q :IPythonCellRestart<CR>
 nnoremap <Leader>d :SlimeSend1 %debug<CR>
 " map <Leader>q to exit debug mode or IPython
 nnoremap <Leader>q :SlimeSend1 exit<CR>
+
+""""[easy motion]""""
+""""[easy motion]""""
+" s{char}{char} to move to {char}{char}
+nmap t <Plug>(easymotion-overwin-f2)
 
 """"[fzf]""""
 """"[fzf]""""
@@ -564,8 +570,8 @@ autocmd CursorHold * silent call CocActionAsync('highlight')
 nmap <F2> <Plug>(coc-rename)
 
 " Formatting selected code.
-xmap <leader>f  <Plug>(coc-format-selected)
-nmap <leader>f  <Plug>(coc-format-selected)
+"xmap <leader>f  <Plug>(coc-format-selected)
+"nmap <leader>f  <Plug>(coc-format-selected)
 
 augroup mygroup
   autocmd!
