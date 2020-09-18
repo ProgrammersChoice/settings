@@ -106,7 +106,15 @@ export PATH=$PATH:/usr/local/go/bin
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-alias fd=fdfind
+alias fd='fdfind'
+alias gs='git status'
+alias ga='git add'
+alias gc='git commit'
+alias gl='git log'
+alias gp='git push'
+alias gb='git branch'
+alias gd='git diff'
+alias gdc='git diff --cached'
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
 

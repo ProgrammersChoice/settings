@@ -88,6 +88,7 @@ command! Reload execute ":source ~/.vimrc"
 command! FileHistory execute ":BCommits"
 nmap com :Commands<CR>
 nnoremap <leader>j :AnyJump<CR>
+nnoremap <leader>w :w<CR>
 set mouse=a
 set nopaste
 set encoding=UTF-8
@@ -161,7 +162,7 @@ let g:slime_dont_ask_default = 1
 " Keyboard mappings. <Leader> is \ (backslash) by default
 
 " map <Leader>s to start IPython
-nnoremap <Leader>start :SlimeSend1 ipython --matplotlib<CR>
+nnoremap <Leader>st :SlimeSend1 ipython --matplotlib<CR>
 " map <Leader>r to run script
 "nnoremap <Leader>e :IPythonCellRun<CR>
 " map <Leader>R to run script and time the execution
@@ -197,7 +198,7 @@ nmap t <Plug>(easymotion-overwin-f2)
 
 """"[fzf]""""
 """"[fzf]""""
-nnoremap <C-p> :GFiles<Cr>
+nnoremap <C-p> :Files<Cr>
 nmap ?? :Rg<Cr>
 nmap // :BLines<Cr>
 let g:fzf_layout = { 'window' : { 'width': 0.8, 'height': 0.8 } }
