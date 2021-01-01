@@ -85,10 +85,12 @@ imap kj <Esc>
 nnoremap zz :q!<CR>
 command! Config execute ":e ~/.vimrc"
 command! Reload execute ":source ~/.vimrc"
-command! FileHistory execute ":BCommits"
+command! Filehistory execute ":BCommits"
 nmap com :Commands<CR>
 nnoremap <leader>j :AnyJump<CR>
 nnoremap <leader>w :w<CR>
+map <Leader>n :NERDTreeToggle<CR>
+map <Leader>t :TagbarToggle<CR>
 set mouse=a
 set nopaste
 set encoding=UTF-8
@@ -194,7 +196,7 @@ nnoremap <Leader>q :SlimeSend1 exit<CR>
 """"[easy motion]""""
 """"[easy motion]""""
 " s{char}{char} to move to {char}{char}
-nmap t <Plug>(easymotion-overwin-f2)
+nmap , <Plug>(easymotion-overwin-f2)
 
 """"[fzf]""""
 """"[fzf]""""
@@ -441,8 +443,8 @@ nmap <F10> :call Togglepaste()<CR>
 "[NERD Tree]""""
 "[NERD Tree]""""
 let g:NERDTreeDirArrows = 1
-let g:NERDTreeDirArrowExpandable = '?'
-let g:NERDTreeDirArrowCollapsible = '?'
+let g:NERDTreeDirArrowExpandable = '▶'
+let g:NERDTreeDirArrowCollapsible = '◀'
 let g:NERDTreeGlyphReadOnly = "RO"
 let NERDTreeWinPos ="left"
 nmap <F7> :NERDTreeToggle<CR>
