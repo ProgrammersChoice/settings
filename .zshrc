@@ -117,7 +117,11 @@ alias gd='git diff'
 alias gdc='git diff --cached'
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
-
+#export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2; exit;}'):0.0
+#export DISPLAY=$(ip route | awk '{print $3; exit}'):0
+export DISPLAY=127.0.0.1:0.0
+export LIBGL_ALWAYS_INDIRECT=1
+export GDK_SCALE=2
 
 source /home/hongiee/py3env/bin/activate
 
@@ -126,3 +130,26 @@ cd ~
 [ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
 export FZF_DEFAULT_COMMAND='fdfind --type f'
 export FZF_CTRL_T_OPTS="--preview 'bat --style=numbers --color=always --line-range :500 {}'"
+
+#fix interop
+fix_wsl2_interop() {
+	for i in $(pstree -np -s $$ | grep -o -E '[0-9]+'); do
+		if [[ -e "/run/WSL/${i}_interop" ]]; then
+			export WSL_INTEROP=/run/WSL/${i}_interop
+		fi
+	done
+}
+~/.emacs.d/bin/doom env > /dev/null 2>&1
+. ~/py3env/bin/activate
+export PYENV_ROOT="$HOME/py3env"
+export PATH="$PYENV_ROOT/bin:$HOME/.emacs.d/bin:$PATH"
+#korean
+export GTK_IM_MODULE=uim
+export QT_IM_MODULEuim
+export XMODIFIERS=@im=uim
+export DefaultIMModule=uim
+export XIM=uim
+export UIM_CANDWIN_PROG=uim-candwin-gtk
+if [ $SHLVL -eq 1 ]; then
+      uim-xim &
+fi
