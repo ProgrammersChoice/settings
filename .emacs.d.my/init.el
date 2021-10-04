@@ -14,10 +14,6 @@
 ;; Set font
 (set-face-attribute 'default nil :font "D2Coding" :height 130)
 
-;; temporary theme
-(load-theme 'wombat)
-
-
 ;; Initialize package sources
 (require 'package)
 
@@ -45,7 +41,6 @@
 (setq use-package-always-ensure t)
 
 (use-package command-log-mode)
-
 
 (use-package vertico
   :ensure t
@@ -83,9 +78,9 @@
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
- )
+)
 
-(column-number-mode) 
+;(column-number-mode) 
 (global-display-line-numbers-mode t)
 ;; Enable line numbers for some modes
 (dolist (mode '(text-mode-hook
@@ -94,7 +89,7 @@
 		eshell-mode-hook
 		shell-mode-hook
                 conf-mode-hook))
-  (add-hook mode (lambda () (display-line-numbers-mode 0))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
 ;; Override some modes which derive from the above
 ;(dolist (mode '(org-mode-hook))
 ;  (add-hook mode (lambda () (display-line-numbers-mode 0))))
@@ -107,11 +102,25 @@
   :init (doom-modeline-mode 1)
   :custom (doom-modeline-height 15))
 
+(use-package doom-themes)
+(load-theme 'doom-gruvbox 1)
+
 (use-package  rainbow-delimiters
-  :hook (prog-mode . rainbow-delimeters-mode))
+  :hook (prog-mode . rainbow-delimiters-mode))
 
 (use-package  which-key
   :init (which-key-mode)
   :diminish which-key-mode
   :config
   (setq which-key-idle-delay 0))
+(use-package helpful
+  :custom
+  (counsel-describe-function-function #'helpful-callable)
+  (counsel-describe-variable-function #'helpful-variable)
+  :bind
+  ([remap describe-function] . helpful-function)
+  ([remap describe-symbol] . helpful-symbol)
+  ([remap describe-variable] . helpful-variable)
+  ([remap describe-command] . helpful-command)
+  ([remap describe-key] . helpful-key))
+;;
