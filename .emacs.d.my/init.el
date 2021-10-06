@@ -9,10 +9,15 @@
 (menu-bar-mode -1)            ; Disable the menu bar
 
 ;; Set up the visible bell
-(setq visible-bell t)
+(setq visible-bell nil)
+(setq ring-bell-function 'ignore)
 
 ;; Set font
 (set-face-attribute 'default nil :font "D2Coding" :height 130)
+
+;; temporary theme
+;;(load-theme 'wombat)
+
 
 ;; Initialize package sources
 (require 'package)
@@ -72,30 +77,44 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(doom-modeline marginalia vertico command-log-mode use-package)))
+   '(hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
-)
+ )
 
-;(column-number-mode) 
-(global-display-line-numbers-mode t)
+(column-number-mode) 
+(global-display-line-numbers-mode t) ;t 는 시작시 묻지말고 셋하라는 의미
 ;; Enable line numbers for some modes
+(dolist (mode '(term-mode-hook
+		eshell-mode-hook
+		shell-mode-hook))
+  (add-hook mode (lambda () (display-line-numbers-mode 0))))
 (dolist (mode '(text-mode-hook
                 prog-mode-hook
-		term-mode-hook
-		eshell-mode-hook
-		shell-mode-hook
                 conf-mode-hook))
-  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+  (add-hook mode (lambda () (display-line-numbers-mode 1))))
+
+
 ;; Override some modes which derive from the above
 ;(dolist (mode '(org-mode-hook))
 ;  (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 (require 'doom-modeline)
 (doom-modeline-mode 1)
+
+(use-package all-the-icons
+  :if (display-graphic-p)
+  :commands all-the-icons-install-fonts
+  :init
+  (unless (find-font (font-spec :name "all-the-icons"))
+    (all-the-icons-install-fonts t)))
+
+(use-package all-the-icons-dired
+  :if (display-graphic-p)
+  :hook (dired-mode . all-the-icons-dired-mode))
 
 (use-package doom-modeline
   :ensure t
@@ -113,6 +132,7 @@
   :diminish which-key-mode
   :config
   (setq which-key-idle-delay 0))
+
 (use-package helpful
   :custom
   (counsel-describe-function-function #'helpful-callable)
@@ -124,3 +144,54 @@
   ([remap describe-command] . helpful-command)
   ([remap describe-key] . helpful-key))
 ;;
+
+(global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+;(global-set-key (kbd "C-M-j") 'switch-to-buffer)
+
+;;내맘데로 키 정의하기
+(use-package general
+  :config
+  (general-evil-setup t)
+  (general-create-definer my/leader-keys
+    :keymaps '(normal insert visual emacs)
+    ;:prefix "C-M"
+    :global-prefix "C-SPC")
+  (my/leader-keys
+   "ts" '(load-theme :which-key "choose theme")))
+
+(use-package undo-tree
+  :init
+  (setq undo-tree-auto-save-history nil)
+  (global-undo-tree-mode 1))
+
+(use-package evil
+  ;; Pre-load configuration
+  :init
+  (setq evil-want-integration t)
+  (setq evil-want-keybinding nil)
+  (setq evil-want-C-u-scroll t)
+  (setq evil-want-C-i-jump nil)
+  (setq evil-respect-visual-line-mode t)
+  (setq evil-undo-system 'undo-tree)
+
+  :config
+  ;; Activate the Evil
+  (evil-mode 1)
+
+  ;; Set Emacs state modes
+  (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+  (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+
+  ;; Use visual line motions even outside of visual-line-mode buffers
+  (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+  (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+
+  (evil-set-initial-state 'messages-buffer-mode 'normal)
+  (evil-set-initial-state 'dashboard-mode 'normal))
+
+(use-package evil-collection
+  :after evil
+  :config
+  (evil-collection-init))
+
+;(use-package hydra)
