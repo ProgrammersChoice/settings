@@ -13,11 +13,10 @@
 (setq ring-bell-function 'ignore)
 
 ;; Set font
-(set-face-attribute 'default nil :font "D2Coding" :height 130)
-
-;; temporary theme
-;;(load-theme 'wombat)
-
+(set-face-attribute 'default nil :family "D2Coding" :height 130)
+;(set-face-font 'default (font-spec :family "D2Coding 13")
+;(set-fontset-font t 'hangul (font-spec :name "D2Coding"))
+(setq default-input-method "korean-hangul")
 
 ;; Initialize package sources
 (require 'package)
@@ -44,6 +43,7 @@
 
 ;; On non-Guix systems, "ensure" packages by default
 (setq use-package-always-ensure t)
+
 
 (use-package command-log-mode)
 
@@ -77,7 +77,7 @@
  ;; Your init file should contain only one such instance.
  ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
+   '(ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
 (custom-set-faces
  ;; custom-set-faces was added by Custom.
  ;; If you edit it by hand, you could mess it up, so be careful.
@@ -86,7 +86,7 @@
  )
 
 (column-number-mode) 
-(global-display-line-numbers-mode t) ;t 는 시작시 묻지말고 셋하라는 의미
+(global-display-line-numbers-mode t) ;;t 는 시작시 묻지말고 셋하라는 의미
 ;; Enable line numbers for some modes
 (dolist (mode '(term-mode-hook
 		eshell-mode-hook
@@ -99,8 +99,8 @@
 
 
 ;; Override some modes which derive from the above
-;(dolist (mode '(org-mode-hook))
-;  (add-hook mode (lambda () (display-line-numbers-mode 0))))
+;;(dolist (mode '(org-mode-hook))
+;;  (add-hook mode (lambda () (display-line-numbers-mode 0))))
 
 (require 'doom-modeline)
 (doom-modeline-mode 1)
@@ -194,4 +194,34 @@
   :config
   (evil-collection-init))
 
-;(use-package hydra)
+;.projectile파일을 폴더에 넣으면 프로젝트로 인식함 .git이 있어도 됨
+(use-package projectile
+  :diminish projectile-mode
+  :config (projectile-mode)
+  :bind-keymap
+  ("C-c p" . projectile-command-map) ;;모든 프로젝타일 키를 C-c p 로 트리거하겠다
+  :init
+  (when (file-directory-p "~/workspace")
+    (setq projectile-project-search-path '("~/workspace")))
+  (setq projectile-switch-project-action #'projectile-dired))
+
+(use-package rg)
+(use-package ag)
+
+;;(use-package hydra)
+
+;;highlight
+;;M-s h . 현재 단어 하이라이트
+;;M-s h r 정규식 하이라이트
+;;M-s h u 삭제
+
+;;use-package는
+;;ensure t은 package가 로컬에 없을때 다운로드 하게함
+;;init은 패키지 로드 전 실행랄 코드
+;;command 는 autoload명령으로 init과 config사이 동작
+;;config는 패키지 로드 후 실행할 내용
+;;bind는 M-x describe-personal-keybinding 에 키 바인딩 적재 시킴
+;;이것과 동일하게 일을 시키는건 아래와 같음
+;; init
+;; (bind-key "C-." 'ace-jumbp-mode))
+;;bind-keymap은 비슷한데 그 패키지에 정의된 keymap만 사용가능
