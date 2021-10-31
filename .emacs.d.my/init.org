@@ -1,3 +1,37 @@
+#+TITLE Emacs Configuration
+#+PROPERTY: header-args:emacs-lisp :tangle /Users/eddie/.emacs.d/init.el
+
+- [[#basic-configuration][Basic Configuration]]
+
+* Basic shortcut
+
+  |----------------------+----------------------------|
+  | 텍스트 크기조절      | C-x C-0 누른 후 + 하거나 - |
+  |----------------------+----------------------------|
+  | 한줄실행             | C-x C-e                    |
+  |----------------------+----------------------------|
+  | 바로 실행            | M-: Eval                   |
+  |----------------------+----------------------------|
+  | 명령어 찾기          | M-x                        |
+  |----------------------+----------------------------|
+  | 현재 단어 하이라이트 | M-s h .                    |
+  |----------------------+----------------------------|
+  | 정규식 하이라이트    | M-s h r                    |
+  |----------------------+----------------------------|
+  | 하이라이트 삭제      | M-s h u                    |
+  |----------------------+----------------------------|
+  | 파일 북마크 추가     | C-x r m                    |
+  |----------------------+----------------------------|
+  | bookmark jump        | C-x r b                    |
+  |----------------------+----------------------------|
+  | list bookmark        | C-x r l                    |
+  |----------------------+----------------------------|
+
+* Basic Configuration
+
+** clean up Emacs user interface, make it minimal.
+
+#+begin_src emacs-lisp
 (setq inhibit-startup-message t)
 
 ;(unless dw/is-termux
@@ -11,7 +45,22 @@
 ;; Set up the visible bell
 (setq visible-bell nil)
 (setq ring-bell-function 'ignore)
+#+end_src
 
+** package setup
+
+- use-package는
+  ensure t은 package가 로컬에 없을때 다운로드 하게함
+  init은 패키지 로드 전 실행랄 코드
+  command 는 autoload명령으로 init과 config사이 동작
+  config는 패키지 로드 후 실행할 내용
+  bind는 M-x describe-personal-keybinding 에 키 바인딩 적재 시킴
+  이것과 동일하게 일을 시키는건 아래와 같음
+   init
+   (bind-key "C-." 'ace-jumbp-mode))
+  bind-keymap은 비슷한데 그 패키지에 정의된 keymap만 사용가능
+
+#+begin_src emacs-lisp
 (require 'package)
 
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
@@ -35,16 +84,30 @@
 
 ;; On non-Guix systems, "ensure" packages by default
 (setq use-package-always-ensure t)
+#+end_src
 
+** Custom packages
+
+#+begin_src emacs-lisp
 (custom-set-variables
  '(package-selected-packages
    '(evil-magit magit ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
 (custom-set-faces
  )
+#+end_src
 
+* Interface settings
+
+** Set font 
+
+#+begin_src emacs-lisp
 (set-face-attribute 'default nil :family "D2Coding" :height 130)
 (setq default-input-method "korean-hangul")
+#+end_src
 
+** Line number
+
+#+begin_src emacs-lisp
 (column-number-mode) 
 (global-display-line-numbers-mode t) ;t 는 시작시 묻지말고 셋하라는 의미
 ;; Enable line numbers for some modes
@@ -56,7 +119,11 @@
                 prog-mode-hook
                 conf-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 1))))
+#+end_src
 
+** Mode line
+
+#+begin_src emacs-lisp
 (require 'doom-modeline)
 (doom-modeline-mode 1)
 
@@ -75,13 +142,25 @@
   :ensure t
   :init (doom-modeline-mode 1)
   :custom (doom-modeline-height 15))
+#+end_src
 
+** Theme
+
+#+begin_src emacs-lisp
 (use-package doom-themes)
 (load-theme 'doom-gruvbox 1)
+#+end_src
 
+** Delimiter
+
+#+begin_src emacs-lisp
 (use-package  rainbow-delimiters
   :hook (prog-mode . rainbow-delimiters-mode))
+#+end_src
 
+** Helpful functions
+
+#+begin_src emacs-lisp
 (use-package  which-key
   :init (which-key-mode)
   :diminish which-key-mode
@@ -100,7 +179,11 @@
   ([remap describe-key] . helpful-key))
 
 (global-set-key (kbd "<escape>") 'keyboard-escape-quit)
+#+end_src
 
+** Key settings
+
+#+begin_src emacs-lisp
 (use-package general
   :config
   (general-evil-setup t)
@@ -115,7 +198,11 @@
   :init
   (setq undo-tree-auto-save-history nil)
   (global-undo-tree-mode 1))
+#+end_src
 
+** Evil Mode
+
+#+begin_src emacs-lisp
 (use-package evil
   ;; Pre-load configuration
   :init
@@ -145,7 +232,14 @@
   :after evil
   :config
   (evil-collection-init))
+#+end_src
 
+
+* Completion System
+
+** Vertico
+
+#+begin_src emacs-lisp
 (use-package vertico
   :ensure t
   :bind (:map vertico-map
@@ -170,6 +264,19 @@
   :init
   (marginalia-mode))
 
+#+end_src
+
+* Coding related
+
+** Projectile
+
+- projectile파일을 폴더에 넣으면 프로젝트로 인식함 .git이 있어도 됨
+- 모든 프로젝타일 키를 C-c p 로 트리거하겠다
+- C-c p f이후 M-o하면 메뉴가 많아지는데 스크롤 방법을 모름.
+- counsel-projectil-rg = c-p-s-r
+
+
+#+begin_src emacs-lisp
 ;https://youtu.be/INTu30BHZGk
 (use-package projectile
   :diminish projectile-mode
@@ -187,49 +294,134 @@
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
 
+#+end_src
+
+** Search
+
+#+begin_src emacs-lisp
 (use-package rg)
 (use-package ag)
+#+end_src
 
+** Magit
+
+- magit diff가 다른 windows에 돌아서 이걸 현재 윈도우에서 하게 하는설정
+- C-x g : magit-status가 가장 많이 쓰는데
+- commands magit-status같은걸 하게하는건데 show function magit-status에서 autoload가보면 magit-status를 기본적으로 하게 바뀌어서 사실 설정할 필요는 없음.
+
+#+begin_src emacs-lisp
 (use-package magit
   :custom
   (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+#+end_src
 
-;(require 'evil-magit)
-;(use-package evil-magit
-;  :after magit)
 
+- C-c g magit status 모드로 진입 s는 스테이지 u는 언스테이지 ?는 단축키 보기 fixup은 rebase하고 amend하는 역할
+
+#+begin_src emacs-lisp
+  ;(require 'evil-magit)
+  ;(use-package evil-magit
+  ;  :after magit)
+#+end_src
+
+- ghub같은 api가 필요함, 하는일은 issue나 pull같은것 처리
+- magit status buffer와 연동해서 issue같은걸 보여줌
+- forge-create-pull-request 같은거를 만들수도 있음
+
+#+begin_src emacs-lisp
 ;(use-package forge)
+#+end_src 
 
+* Org Mode
+
+** 기본 사용법
+- head
+  *는 첫째 head , C-<return> 새로운 아이템을 추가함 동일레벨로, M-<ret> 도 동일 대신위
+  **는 둘째 head, M-up 같은거는 동일레벨에서 위치 위아래로 바꿈,
+                 S-M-up하면 레벨 관계없이 한줄단위 변경가능
+  S-tab하면 head 아래 보이는걸 줄여주기도 함
+- link
+  org-insert-link, 글자선택후 C-c C-l하면 하이퍼링크 삽입가능; C-c C-o하면 현재 커서 링크를 열게됨
+
+- table
+  table |--|--|--| esc하고 M-<ret> 하면 가로줄 생김, tab은 정렬기능 
+  
+- list
+  list 는 - item, 1. item 하고 입력하면 되고 뒤에서 M-<ret>하면 바로 아래줄 아이템 추가
+
+- check list
+ check list [ ]  안에 X넣어도 되고 C-c C-x C-b C를 홀드 하고 cxb하면 됨
+              S-M-<ret>하면 체크박스 추가됨 (list에서 이키는 체크박스 추가)딴데서는 todo로 사용됨
+- souce block
+  #+begin_src python
+  source
+  #+end_src
+
+- TODO
+ TODO는 heading에서 todo입력하면 됨 C-c C-t하면 done으로 바뀜 S-방향키 해도 됨
+
+** Org 단축키
+
+https://youtu.be/PNE-mgkZ6HM
+- org-agenda org-agenda-list
+- org-schedule삽입 *C-c C-s* shift누르고 방향키 한담에 <ret>
+- org-todo 상태변경 C-c C-t
+- org-deadline C-c C-d
+-  org-deadline-warning-days로 agenda에 나타나는 날자를 정할수 있음
+- org-timestamp C-c .
+- repeated tasks~ every one day, 등등 알람을 계속주는것
+-  +1y를 붙이면  +2d +1d등등 하면 됨<2022-02-07 월+1d>
+- org-wild-notifer 는 os와 상관없이 노티를 날려주는 패키지
+- task state를 줘서 todo 리스트를 관리할수 있음
+- counsel-org-tag 한담에 tag를 추가할 수 잇음 M-<ret>해서 여러개 추가나 선택도 가능
+- org-agenda-custom-commands, org-tag-alist같은 패키지들로 태그 관리가능.
+- org-set-effort 
+- org-set-properties effort 5 days C-c C-x p
+;DONE을 제거하는 방법
+
+** 기본 설정
+
+강의 https://youtu.be/VcgjTEa0kU4
+
+#+begin_src emacs-lisp
 (defun efs/org-mode-setup()
   (org-indent-mode)
   ;(variable-pitch-mode 1)
   ;(auto-fill-mode 0)
   (visual-line-mode 1))
   ;(setq evil-auto-indent nil))
+#+end_src
 
-(use-package org
-    :hook (org-mode . efs/org-mode-setup) ;훅을 쓰는 이유는 org buffer시작할때마다 위에설정 호출해서 그버퍼는 변수상태로 셋업하기 위함.
-    :config
-    (setq org-ellipsis " ▾" ; S-tab하면 ... 나오는걸 이걸로 바꾸기 위함
-          org-hide-emphasis-markers t)) ;bold link등 */같은거 안보이게
-    (setq org-agenda-start-with-log-mode t)
-    (setq org-log-done 'time)
-    (setq org-log-into-drawer t)
-    (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-          '("~/workspace/org/tasks.org"
-            "~/workspace/org/test.org")) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
+** Org custom 설정
 
-  ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
-  (setq org-todo-keywords
-        '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
-          (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
-  (setq org-refile-targets
-        '((nil :maxlevel . 1)
-         (org-agenda-files :maxlevel . 1)))
+#+begin_src emacs-lisp
+    (use-package org
+      :hook (org-mode . efs/org-mode-setup) ;훅을 쓰는 이유는 org buffer시작할때마다 위에설정 호출해서 그버퍼는 변수상태로 셋업하기 위함.
+      :config
+      (setq org-ellipsis " ▾" ; S-tab하면 ... 나오는걸 이걸로 바꾸기 위함
+            org-hide-emphasis-markers t)) ;bold link등 */같은거 안보이게
+      (setq org-agenda-start-with-log-mode t)
+      (setq org-log-done 'time)
+      (setq org-log-into-drawer t)
+      (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
+            '("~/workspace/org/tasks.org"
+              "~/workspace/org/test.org")) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
 
-;(advice-add 'org-refile :after 'org-save-all-org-buffers)
-;이렇게 하면 org-refile실행시 바로 org-save-all-org-buffers가 실행이됨
+    ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
+    (setq org-todo-keywords
+          '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
+            (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
+    (setq org-refile-targets
+          '((nil :maxlevel . 1)
+           (org-agenda-files :maxlevel . 1)))
 
+  ;(advice-add 'org-refile :after 'org-save-all-org-buffers)
+  ;이렇게 하면 org-refile실행시 바로 org-save-all-org-buffers가 실행이됨
+#+end_src
+
+** Head 를 좀더 멋지게 수정
+
+#+begin_src emacs-lisp
 ;head마다 다른 사이즈
 (require 'org-faces)
 (dolist (face '((org-level-1 . 1.2)
@@ -253,7 +445,11 @@
 (font-lock-add-keywords 'org-mode
                         '(("^ *\\([-]\\) "
                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+#+end_src
 
+** Org Mode 가운데 정렬
+
+#+begin_src emacs-lisp
 ;;visual fill mode는 org mode가 왼쪽에 치우친걸 상황을 바꿈
 ;set margins mode
 ;(defun efs/org-mode-visual-fill ()
@@ -262,7 +458,11 @@
 ;  (visual-fill-column-mode 1))
 ;(use-package visual-fill-column
 ;  :hook (org-mode . efs/org-mode-visual-fill))
+#+end_src
 
+** Org Capture
+
+#+begin_src emacs-lisp
 ;org-capture
 ;org-capture-templates
 ;(setq org-capture-templates
@@ -311,6 +511,32 @@
 ;    ("mp" "Blood Pressure" table-line (file+headline "~/Notes/Metrics.org" "Blood Pressure")
 ;     "| %U | %^{Systolic} | %^{Diastolic} | %^{Notes}" :kill-buffer)))
 
+#+end_src
+
+** Org Babel 
+
+*** 코드블럭 실행
+- M-x org-babel-execute-src-block
+- 단축키 블럭에 가서 C-c C-c
+
+-  #+begin_src python :results output
+-  #이렇게 하면 print한 결과가 result에 나옴
+-  #+end_src
+
+- #+begin_src python :results value
+- #이렇게 하면 return한 결과가 result에 나옴
+-  #+end_src
+
+*** Tangle
+- #+PROPERTY: header-args:emacs-lisp :tangle ./init-new.el하면 모든 내용이 저 파일로 옮겨짐
+- org-babel-tangle C-c C-v t 블록을 딴 파일에 저장.
+  이걸 이용해서 emacs를 시작하도록 하면 됨.
+- #+begin_src python :tangle ./newpython.py
+  org-babel-tangle-file "파일명" 으로 자동으로 해당파일을 tangle하도록 할 수 있음
+
+- #+PROPERTY: header-args:emacs-lisp :tangle ./init-new.el
+  
+#+begin_src emacs-lisp
 ; org-babel에서 사용할수 있는 언어 등록
 (org-babel-do-load-languages
  'org-babel-load-languages
@@ -333,3 +559,6 @@
     (let ((org-confirm-babel-evaluate nil))
       (org-babel-tangle))))
  (add-hook 'org-mode-hook (lambda ()(add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+#+end_src
+
+
