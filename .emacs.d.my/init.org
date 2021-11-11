@@ -114,10 +114,12 @@
 #+begin_src emacs-lisp
   (column-number-mode) 
   (global-display-line-numbers-mode t) ;t 는 시작시 묻지말고 셋하라는 의미
+  (setq display-line-numbers-type 'relative)
   ;; enable line numbers for some modes
   (dolist (mode '(term-mode-hook
                   eshell-mode-hook
-		      treemacs-mode-hook
+                  vterm-mode-hook
+                  treemacs-mode-hook
                   shell-mode-hook))
     (add-hook mode (lambda () (display-line-numbers-mode 0))))
   (dolist (mode '(text-mode-hook
@@ -311,9 +313,9 @@
 ** Projectile
 
 - projectile파일을 폴더에 넣으면 프로젝트로 인식함 .git이 있어도 됨
-- 모든 프로젝타일 키를 C-c p 로 트리거하겠다
-- C-c p f이후 M-o하면 메뉴가 많아지는데 스크롤 방법을 모름.
-- counsel-projectil-rg = C-c p s r
+- 모든 프로젝타일 키를 =C-c p= 로 트리거하겠다
+- =C-c p f= 이후 =M-o= 하면 메뉴가 많아지는데 스크롤 방법을 모름.
+- counsel-projectil-rg =C-c p s r=
 
 
 #+begin_src emacs-lisp
@@ -337,8 +339,8 @@
 #+end_src
 
 ** Commenting
-- M-;가 기본 emacs comment 설정인데 선택 없을시 좀 이상하게 동작함
-- 그래서 요거 써서 M-/ 로 하면 됨
+- M-; 가 기본 emacs comment 설정인데 선택 없을시 좀 이상하게 동작함
+- 그래서 요거 써서 =M-/= 로 하면 됨
 
 
 #+begin_src emacs-lisp
@@ -370,10 +372,10 @@
 #+end_src
 
 Commands:
-- Interactive Python shell: M-x run-python (C-c C-p or g z in evil-mode)
-- python-shell-send-file(C-c C-l)
-- python-shell-send-buffer(C-c C-c)
-- python-shell-send-region(C-c C-r)
+- Interactive Python shell: =M-x run-python= (C-c C-p or g z in evil-mode)
+- python-shell-send-file =C-c C-l=
+- python-shell-send-buffer =C-c C-c=
+- python-shell-send-region =C-c C-r=
   
 **** python virtual env
 - pyvenv-activate 요걸로 선택할 수 있음
@@ -396,7 +398,7 @@ Commands:
 
 
 ** lsp-mode
-- 기본 키는 window - l 같은 키여서 C-c l로 바꿈
+- 기본 키는 window - l 같은 키여서 =C-c l= 로 바꿈
 - completion-at-point 를 잘 사용하자 C-down + ivy
 
 
@@ -415,18 +417,26 @@ Commands:
 
 #+end_src
 
+*** flymake 
 - flymake-show-diagnostics-buffer : error, warning진단을 보여줌
   flycheck-list-errors ;요건 동작안함
+  #+begin_src emacs-lisp
+(use-package flymake-diagnostic-at-point
+  ;:after flymake
+  :config
+  (add-hook 'flymake-mode-hook #'flymake-diagnostic-at-point-mode))
+
+  #+end_src
   
 *** lsp with python-mode
 
-- lsp-find-defenition (C-c l g g)
-- lsp-find-reference (C-c l g r) C-j, C-k로 위아래
-- lsp-rename (C-c l r r)
-- lsp-format-buffer(C-c l = =) ;default = flake8
-- lsp-format-region(C-c l = r)
+- lsp-find-defenition =C-c l g g=
+- lsp-find-reference =C-c l g r= C-j, C-k로 위아래
+- lsp-rename =C-c l r r=
+- lsp-format-buffer =C-c l = == ;default = flake8
+- lsp-format-region =C-c l = r=
 - python lsp-mode
-  M-x eshell
+  =M-x eshell=
 #+begin_src shell
   pip install 'python-lsp-server[all]'
 #+end_src
@@ -511,45 +521,44 @@ npm i -g typescript-language-server; npm i -g typescript
 #+end_src
 
 
-
 * Org Mode
 
 ** 기본 사용법
 - head
-  *는 첫째 head , C-<return> 새로운 아이템을 추가함 동일레벨로, M-<ret> 도 동일 대신위
-  **는 둘째 head, M-up 같은거는 동일레벨에서 위치 위아래로 바꿈,
-                 S-M-up하면 레벨 관계없이 한줄단위 변경가능
+  *는 첫째 head , =C-<return>= 새로운 아이템을 추가함 동일레벨로, =M-<ret>= 도 동일 대신위
+  **는 둘째 head, =M-up= 같은거는 동일레벨에서 위치 위아래로 바꿈,
+                 =S-M-up= 하면 레벨 관계없이 한줄단위 변경가능
   S-tab하면 head 아래 보이는걸 줄여주기도 함
 - link
-  org-insert-link, 글자선택후 C-c C-l하면 하이퍼링크 삽입가능; C-c C-o하면 현재 커서 링크를 열게됨
+  org-insert-link, 글자선택후 =C-c C-l= 하면 하이퍼링크 삽입가능; =C-c C-o= 하면 현재 커서 링크를 열게됨
 
 - table
-  table |--|--|--| esc하고 M-<ret> 하면 가로줄 생김, tab은 정렬기능 
+  table |--|--|--| esc하고 =M-<ret>= 하면 가로줄 생김, =tab= 은 정렬기능 
   
 - list
-  list 는 - item, 1. item 하고 입력하면 되고 뒤에서 M-<ret>하면 바로 아래줄 아이템 추가
+  list 는 - item, 1. item 하고 입력하면 되고 뒤에서 =M-<ret>= 하면 바로 아래줄 아이템 추가
   S-> 하면 리스트 모양 바뀜 - 1) 등등
 
 - check list
- check list [ ]  안에 X넣어도 되고 C-c C-x C-b C를 홀드 하고 cxb하면 됨
-              S-M-<ret>하면 체크박스 추가됨 (list에서 이키는 체크박스 추가)딴데서는 todo로 사용됨
+ check list [ ]  안에 X넣어도 되고 =C-c C-x C-b= C를 홀드 하고 cxb하면 됨
+              =S-M-<ret>= 하면 체크박스 추가됨 (list에서 이키는 체크박스 추가)딴데서는 todo로 사용됨
 - souce block
   #+begin_src python
   source
   #+end_src
 
 - TODO
- TODO는 heading에서 todo입력하면 됨 C-c C-t하면 done으로 바뀜 S-방향키 해도 됨
+ TODO는 heading에서 todo입력하면 됨 =C-c C-t= 하면 done으로 바뀜 S-방향키 해도 됨
 
 ** Org 단축키
 
 https://youtu.be/PNE-mgkZ6HM
 - org-agenda org-agenda-list
-- org-schedule삽입 *C-c C-s* shift누르고 방향키 한담에 <ret>
-- org-todo 상태변경 C-c C-t
-- org-deadline C-c C-d
+- org-schedule삽입 =C-c C-s= shift누르고 방향키 한담에 <ret>
+- org-todo 상태변경 =C-c C-t=
+- org-deadline =C-c C-d=
 -  org-deadline-warning-days로 agenda에 나타나는 날자를 정할수 있음
-- org-timestamp C-c .
+- org-timestamp =C-c .=
 - repeated tasks~ every one day, 등등 알람을 계속주는것
 -  +1y를 붙이면  +2d +1d등등 하면 됨<2022-02-07 월+1d>
 - org-wild-notifer 는 os와 상관없이 노티를 날려주는 패키지
@@ -557,7 +566,7 @@ https://youtu.be/PNE-mgkZ6HM
 - counsel-org-tag 한담에 tag를 추가할 수 잇음 M-<ret>해서 여러개 추가나 선택도 가능
 - org-agenda-custom-commands, org-tag-alist같은 패키지들로 태그 관리가능.
 - org-set-effort 
-- org-set-properties effort 5 days C-c C-x p
+- org-set-properties effort 5 days =C-c C-x p=
 ;DONE을 제거하는 방법
 
 ** 기본 설정
@@ -698,6 +707,27 @@ https://youtu.be/PNE-mgkZ6HM
 
 #+end_src
 
+** Org Alert
+- install 할때 org-plus-contrib가 있는지 보고 설치함
+- =org-notify-add= 확인
+#+begin_src emacs-lisp
+  (use-package org
+  :ensure org-plus-contrib)
+
+  (use-package org-notify
+  :ensure nil
+  :after org
+  :config
+  (org-notify-start)
+  (org-notify-add
+   'default
+   '(:time "10m" :period "5s" :duration 100 :actions -notify)
+   '(:time "7m" :period "5s" :duration 50 :actions -notify/window))
+  (org-notify-add
+   'reminder
+   '(:time "10m" :period "5s" :duration 100 :actions -notify)))
+#+end_src
+
 ** Org Babel 
 
 *** 코드블럭 실행
@@ -778,6 +808,36 @@ https://youtu.be/PNE-mgkZ6HM
 
 #+RESULTS:
 : 155
+* Terminal
+** vterm
+#+begin_src emacs-lisp
+  (use-package vterm
+    :commands vterm
+    :config
+    (setq vterm-max-scrollback 10000))
+#+end_src
+** eshell
+#+begin_src emacs-lisp
+  (defun efs/configure-eshell()
+    ;;save command history
+    (add-hock 'eshell-pre-command-hook 'eshell-save-some-history)
+    ;; truncate buffer for performance
+    (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffers)
+    (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+    (evil-normalize-keymaps)
+    (setq eshell-history-size 10000
+          eshell-buffer-maximum-lines 10000
+          eshell-hist-ignoredups t
+          eshell-scroll-to-bottom-on-input t))
+  
+  (use-package eshell-git-prompt)
+  
+  (use-package eshell
+    :hook (eshell-first-time-mode . efs/configure-eshell)
+    :config
+    (eshell-git-prompt-use-theme 'powerline))
+  
+#+end_src
 
 * 각종 팁
  - system-type변수에는 현재 환경이 windows인지 등이 나옴

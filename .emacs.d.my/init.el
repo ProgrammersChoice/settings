@@ -1,14 +1,14 @@
 (setq inhibit-startup-message t)
 
 ;(unless dw/is-termux
-(scroll-bar-mode -1)        ; Disable visible scrollbar
-(tool-bar-mode -1)          ; Disable the toolbar
-(tooltip-mode -1)           ; Disable tooltips
-(set-fringe-mode 10)       ; Give some breathing room
+(scroll-bar-mode -1)        ; disable visible scrollbar
+(tool-bar-mode -1)          ; disable the toolbar
+(tooltip-mode -1)           ; disable tooltips
+(set-fringe-mode 10)       ; give some breathing room
 
-(menu-bar-mode -1)            ; Disable the menu bar
+(menu-bar-mode -1)            ; disable the menu bar
 
-;; Set up the visible bell
+;; set up the visible bell
 (setq visible-bell nil)
 (setq ring-bell-function 'ignore)
 
@@ -17,23 +17,23 @@
 (setq package-archives '(("melpa" . "https://melpa.org/packages/")
                          ("org" . "https://orgmode.org/elpa/")
                          ("elpa" . "https://elpa.gnu.org/packages/")))
-;; Fix an issue accessing the ELPA archive in Termux
+;; fix an issue accessing the elpa archive in termux
 ;(when dw/is-termux
-;  (setq gnutls-algorithm-priority "NORMAL:-VERS-TLS1.3"))
+;  (setq gnutls-algorithm-priority "normal:-vers-tls1.3"))
 
 (package-initialize)
 (unless package-archive-contents
   (package-refresh-contents))
 
-;; Initialize use-package on non-Linux platforms
+;; initialize use-package on non-linux platforms
 (unless (package-installed-p 'use-package)
    (package-install 'use-package))
 (require 'use-package)
 
-;; Uncomment this to get a reading on packages that get loaded at startup
+;; uncomment this to get a reading on packages that get loaded at startup
 ;;(setq use-package-verbose t)
 
-;; On non-Guix systems, "ensure" packages by default
+;; on non-guix systems, "ensure" packages by default
 (setq use-package-always-ensure t)
 
 (custom-set-variables
@@ -42,15 +42,19 @@
 (custom-set-faces
  )
 
-(set-face-attribute 'default nil :family "D2Coding" :height 130)
+(set-face-attribute 'default nil :family "d2coding" :height 130)
 (setq default-input-method "korean-hangul")
+(set-fontset-font t 'hangul (font-spec :name "d2coding"))
 
 (column-number-mode) 
 (global-display-line-numbers-mode t) ;t 는 시작시 묻지말고 셋하라는 의미
-;; Enable line numbers for some modes
+(setq display-line-numbers-type 'relative)
+;; enable line numbers for some modes
 (dolist (mode '(term-mode-hook
-		eshell-mode-hook
-		shell-mode-hook))
+                eshell-mode-hook
+                vterm-mode-hook
+                treemacs-mode-hook
+                shell-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 0))))
 (dolist (mode '(text-mode-hook
                 prog-mode-hook
@@ -146,14 +150,40 @@
   :config
   (evil-collection-init))
 
+;;easymotion C-'를 트리거로 설정
+(use-package avy)
+(global-set-key (kbd "C-'") 'avy-goto-char-2)
+
+;;evil-multiedit 힐스너 버전
+   ;(use-package evil-multiedit)
+   ;(evil-multiedit-default-keybinds)
+;   (use-package evil-mc)
+;   (global-evil-mc-mode 1)
+ ;; evil-mc
+; (evil-define-key '(normal visual) 'global
+;   "gzm" #'evil-mc-make-all-cursors
+;   "gzu" #'evil-mc-undo-all-cursors
+;   "gzz" #'+evil/mc-toggle-cursors
+;   "gzc" #'+evil/mc-make-cursor-here
+;   "gzn" #'evil-mc-make-and-goto-next-cursor
+;   "gzp" #'evil-mc-make-and-goto-prev-cursor
+;   "gzN" #'evil-mc-make-and-goto-last-cursor
+;   "gzP" #'evil-mc-make-and-goto-first-cursor)
+; (with-eval-after-load 'evil-mc
+;   (evil-define-key '(normal visual) evil-mc-key-map
+;     (kbd "C-n") #'evil-mc-make-and-goto-next-cursor
+;     (kbd "C-N") #'evil-mc-make-and-goto-last-cursor
+;     (kbd "C-p") #'evil-mc-make-and-goto-prev-cursor
+;     (kbd "C-P") #'evil-mc-make-and-goto-first-cursor))
+
 (use-package vertico
   :ensure t
   :bind (:map vertico-map
-	      ("C-j" . vertico-next)
-	      ("C-k" . vertico-previous)
-	      ("C-f" . vertico-exit)
-	      :map minibuffer-local-map
-	      ("M-h" . backward-kill-word))
+              ("C-j" . vertico-next)
+              ("C-k" . vertico-previous)
+              ("C-f" . vertico-exit)
+              :map minibuffer-local-map
+              ("M-h" . backward-kill-word))
   :custom
   (vertico-cycle t)
   :init
@@ -187,18 +217,72 @@
 (use-package counsel-projectile
   :config (counsel-projectile-mode))
 
-(use-package rg)
-(use-package ag)
+(use-package evil-nerd-commenter
+:bind ("M-/" . evilnc-comment-or-uncomment-lines))
 
-(use-package magit
+(use-package python-mode
+  ;:ensure nil
+  :hook (python-mode . lsp-deferred)
+  ;:custom
+  ;python-shell-interpreter "python3")
+  ;(dap-python-excutable "python3")
+  ;(dap-python-debugger 'debugpy)
+  ;:config
+  ;(require 'dap-python)
+)
+
+(use-package pyvenv
+  :config
+(pyvenv-mode 1))
+
+(use-package typescript-mode
+  :mode "\\.ts\\'"
+  :hook (typescript-mode . lsp-deferred)
+  :config
+  (setq typescript-indent-level 2))
+
+(defun efs/lsp-mode-setup()
+  (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
+  (lsp-headerline-breadcrumb-mode)) ;위에 경로 보여주기
+
+(use-package lsp-mode
+  :commands (lsp lsp-deferred)
+  :hook (lsp-mode . efs/lsp-mode-setup)
+  :init
+  (setq lsp-keymap-prefix "C-c l")
+  :config
+  (lsp-enable-which-key-integration t))
+
+(use-package flymake-diagnostic-at-point
+  ;:after flymake
+  :config
+  (add-hook 'flymake-mode-hook #'flymake-diagnostic-at-point-mode))
+
+(use-package company
+  :after lsp-mode
+  :hook (lsp-mode . company-mode)
+  :bind (:map company-active-map
+         ("<tab>" . company-complete-selection))
+        (:map lsp-mode-map
+         ("<tab>" . company-indent-or-complete-common))
   :custom
-  (magit-display-buffer-function #'magit-display-buffer-same-window-except-diff-v1))
+  (company-minimum-prefix-length 1)
+  (company-idle-delay 0.0))
 
-;(require 'evil-magit)
-;(use-package evil-magit
-;  :after magit)
+(use-package company-box
+  :hook (company-mode . company-box-mode))
 
-;(use-package forge)
+(use-package lsp-ui
+  :hook (lsp-mode . lsp-ui-mode))
+;:custom
+;(lsp-ui-doc-position 'bottom))
+
+(use-package lsp-treemacs
+  :after lsp)
+
+(use-package lsp-ivy)
+
+;(dap-python-debugger 'debugpy)
 
 (defun efs/org-mode-setup()
   (org-indent-mode)
@@ -206,6 +290,7 @@
   ;(auto-fill-mode 0)
   (visual-line-mode 1))
   ;(setq evil-auto-indent nil))
+                                        ;(use-package toc-org)
 
 (use-package org
     :hook (org-mode . efs/org-mode-setup) ;훅을 쓰는 이유는 org buffer시작할때마다 위에설정 호출해서 그버퍼는 변수상태로 셋업하기 위함.
@@ -311,11 +396,28 @@
 ;    ("mp" "Blood Pressure" table-line (file+headline "~/Notes/Metrics.org" "Blood Pressure")
 ;     "| %U | %^{Systolic} | %^{Diastolic} | %^{Notes}" :kill-buffer)))
 
+(use-package org
+:ensure org-plus-contrib)
+
+(use-package org-notify
+:ensure nil
+:after org
+:config
+(org-notify-start)
+(org-notify-add
+ 'default
+ '(:time "10m" :period "5s" :duration 100 :actions -notify)
+ '(:time "7m" :period "5s" :duration 50 :actions -notify/window))
+(org-notify-add
+ 'reminder
+ '(:time "10m" :period "5s" :duration 100 :actions -notify)))
+
 ; org-babel에서 사용할수 있는 언어 등록
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((emacs-lisp . t)
    (python . t)))
+
 
 (setq org-confirm-babel-evaluate nil) ;;실행할지 묻는거 끄기
 (setq org-babel-python-command "python3") ;;python3써라
@@ -329,7 +431,35 @@
 ;이 파일을 저장하면 자동으로 tangle해서 저장하도록 하고싶다면
 (defun efs/org-babel-tangle-config ()
   (when (string-equal (buffer-file-name)
-		      (expand-file-name "/Users/eddie/.emacs.d/init.org"))
+                      (expand-file-name "/Users/eddie/.emacs.d/init.org"))
     (let ((org-confirm-babel-evaluate nil))
       (org-babel-tangle))))
  (add-hook 'org-mode-hook (lambda ()(add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
+
+;(push '("confi-unix" . confi-unix) org-src-lang-mode)
+
+;(+ 55 100)
+
+(use-package vterm
+  :commands vterm
+  :config
+  (setq vterm-max-scrollback 10000))
+
+(defun efs/configure-eshell()
+  ;;save command history
+  (add-hock 'eshell-pre-command-hook 'eshell-save-some-history)
+  ;; truncate buffer for performance
+  (add-to-list 'eshell-output-filter-functions 'eshell-truncate-buffers)
+  (evil-define-key '(normal insert visual) eshell-mode-map (kbd "<home>") 'eshell-bol)
+  (evil-normalize-keymaps)
+  (setq eshell-history-size 10000
+        eshell-buffer-maximum-lines 10000
+        eshell-hist-ignoredups t
+        eshell-scroll-to-bottom-on-input t))
+
+(use-package eshell-git-prompt)
+
+(use-package eshell
+  :hook (eshell-first-time-mode . efs/configure-eshell)
+  :config
+  (eshell-git-prompt-use-theme 'powerline))
