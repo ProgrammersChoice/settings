@@ -1,31 +1,3 @@
-;;mac built in ls does not support group-directories-first
-;;so brew install coreutils first
-(setq insert-directory-program "gls" dired-use-ls-dired t)
-(use-package dired-single)
-(use-package dired
-  :ensure nil ;use-package가 install 안하게 함.
-  :commands (dired dired-jump)
-  :bind (("C-x C-j" . dired-jump))
-  :custom ((dired-listing-switches "-al --group-directories-first"))
-  :config
-  (evil-collection-define-key 'normal 'dired-mode-map
-    "h" 'dired-single-up-directory
-    "l" 'dired-single-buffer))
-(use-package all-the-icons-dired
-  :if (display-graphic-p)
-  :hook (dired-mode . all-the-icons-dired-mode))
-;png파일은 feh라는 툴로 열고...
-(use-package dired-open
-  :config
-  (setq dired-open-extensions '(("png" . "feh")
-                                ("mkv" . "mpv"))))
-;hide dot files
-(use-package dired-hide-dotfiles
-  :hook (dired-mode . dired-hide-dotfiles-mode)
-  :config
-  (evil-collection-define-key 'normal 'dired-mode-map
-    "H" 'dired-hide-dotfiles-mode))
-
 (setq inhibit-startup-message t)
 
 ;(unless dw/is-termux
@@ -65,17 +37,9 @@
 (setq use-package-always-ensure t)
 
 (custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(dired-hide-dotfiles dired-single evil-magit magit ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
+   '(evil-magit magit ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
 (custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
  )
 
 (set-face-attribute 'default nil :family "d2coding" :height 130)
@@ -182,6 +146,34 @@
   :after evil
   :config
   (evil-collection-init))
+
+;;mac built in ls does not support group-directories-first
+;;so brew install coreutils first
+(setq insert-directory-program "gls" dired-use-ls-dired t)
+(use-package dired-single)
+(use-package dired
+  :ensure nil ;use-package가 install 안하게 함.
+  :commands (dired dired-jump)
+  :bind (("C-x C-j" . dired-jump))
+  :custom ((dired-listing-switches "-al --group-directories-first"))
+  :config
+  (evil-collection-define-key 'normal 'dired-mode-map
+    "h" 'dired-single-up-directory
+    "l" 'dired-single-buffer))
+(use-package all-the-icons-dired
+  :if (display-graphic-p)
+  :hook (dired-mode . all-the-icons-dired-mode))
+;png파일은 feh라는 툴로 열고...
+(use-package dired-open
+  :config
+  (setq dired-open-extensions '(("png" . "feh")
+                                ("mkv" . "mpv"))))
+;hide dot files
+(use-package dired-hide-dotfiles
+  :hook (dired-mode . dired-hide-dotfiles-mode)
+  :config
+  (evil-collection-define-key 'normal 'dired-mode-map
+    "H" 'dired-hide-dotfiles-mode))
 
 ;;easymotion C-'를 트리거로 설정
 (use-package avy)

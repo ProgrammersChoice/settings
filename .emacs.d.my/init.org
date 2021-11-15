@@ -66,40 +66,7 @@
   */ : select directories
   %m : regex mark
 
-  - =dired-listing-switches:= try =-agho --group-directories-first= 디렉토리 후 파일 보이게 하는것
-  - dired single : dired buffer를 하나로 관리  
-  - 특정 확장자를 emacs가 아닌 다른 프로그램으로 열어서 exwm이 열게도 가능\
 
-  #+begin_src emacs-lisp
-    ;;mac built in ls does not support group-directories-first
-    ;;so brew install coreutils first
-    (setq insert-directory-program "gls" dired-use-ls-dired t)
-    (use-package dired-single)
-    (use-package dired
-      :ensure nil ;use-package가 install 안하게 함.
-      :commands (dired dired-jump)
-      :bind (("C-x C-j" . dired-jump))
-      :custom ((dired-listing-switches "-al --group-directories-first"))
-      :config
-      (evil-collection-define-key 'normal 'dired-mode-map
-        "h" 'dired-single-up-directory
-        "l" 'dired-single-buffer))
-    (use-package all-the-icons-dired
-      :if (display-graphic-p)
-      :hook (dired-mode . all-the-icons-dired-mode))
-    ;png파일은 feh라는 툴로 열고...
-    (use-package dired-open
-      :config
-      (setq dired-open-extensions '(("png" . "feh")
-                                    ("mkv" . "mpv"))))
-    ;hide dot files
-    (use-package dired-hide-dotfiles
-      :hook (dired-mode . dired-hide-dotfiles-mode)
-      :config
-      (evil-collection-define-key 'normal 'dired-mode-map
-        "H" 'dired-hide-dotfiles-mode))
-    
-  #+end_src
 
     
 
@@ -290,27 +257,60 @@
       (setq evil-want-C-i-jump nil)
       (setq evil-respect-visual-line-mode t)
       (setq evil-undo-system 'undo-tree)
-
+  
       :config
       ;; Activate the Evil
       (evil-mode 1)
-
+  
       ;; Set Emacs state modes
       (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
       (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-
+  
       ;; Use visual line motions even outside of visual-line-mode buffers
       (evil-global-set-key 'motion "j" 'evil-next-visual-line)
       (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-
+  
       (evil-set-initial-state 'messages-buffer-mode 'normal)
       (evil-set-initial-state 'dashboard-mode 'normal))
-
+  
     (use-package evil-collection
       :after evil
       :config
       (evil-collection-init))
+#+end_src
 
+  - =dired-listing-switches:= try =-agho --group-directories-first= 디렉토리 후 파일 보이게 하는것
+  - dired single : dired buffer를 하나로 관리  
+  - 특정 확장자를 emacs가 아닌 다른 프로그램으로 열어서 exwm이 열게도 가능\
+
+#+begin_src emacs-lisp
+    ;;mac built in ls does not support group-directories-first
+    ;;so brew install coreutils first
+    (setq insert-directory-program "gls" dired-use-ls-dired t)
+    (use-package dired-single)
+    (use-package dired
+      :ensure nil ;use-package가 install 안하게 함.
+      :commands (dired dired-jump)
+      :bind (("C-x C-j" . dired-jump))
+      :custom ((dired-listing-switches "-al --group-directories-first"))
+      :config
+      (evil-collection-define-key 'normal 'dired-mode-map
+        "h" 'dired-single-up-directory
+        "l" 'dired-single-buffer))
+    (use-package all-the-icons-dired
+      :if (display-graphic-p)
+      :hook (dired-mode . all-the-icons-dired-mode))
+    ;png파일은 feh라는 툴로 열고...
+    (use-package dired-open
+      :config
+      (setq dired-open-extensions '(("png" . "feh")
+                                    ("mkv" . "mpv"))))
+    ;hide dot files
+    (use-package dired-hide-dotfiles
+      :hook (dired-mode . dired-hide-dotfiles-mode)
+      :config
+      (evil-collection-define-key 'normal 'dired-mode-map
+        "H" 'dired-hide-dotfiles-mode))
 #+end_src
 
 ** easy motion
@@ -320,7 +320,6 @@
     (use-package avy)
     (global-set-key (kbd "C-'") 'avy-goto-char-2)
 #+end_src
-
 
 
 ** evil mc 멀티커서
