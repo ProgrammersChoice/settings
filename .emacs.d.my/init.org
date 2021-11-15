@@ -28,6 +28,80 @@
   |----------------------+----------------------------|
   | list bookmark        | c-x r l                    |
   |----------------------+----------------------------|
+    rename-file
+    describe-bindings =C-h b=
+
+** dired 사용법
+- =C-x d= 가 단축키
+  =dired-listing-switches= : -al 기본이 ls -al 처럼 보이니 이걸 바꾸면 됨
+  =C-x C-j= 바로 현재창에 dired 띄우기
+  ^ : 상위 디렉토리로 이동
+  J : 파일이름 검색해서 이동
+  RET : 파일이나 디렉토리 열기
+  M-RET : 다른 창에서 열기 S-RET 는 열고 포커스는 이동안함
+  go : 프리뷰 모드로 esc하면 창 닫고 돌아감
+  q : dired buffer bury
+  gy : file type
+  gr : buffer refresh
+  M : chmod
+  O : chown
+  gG : change the group
+  L : load an emacs lisp into emacs
+  C : copy
+  = : dired diff
+  + : create a directory
+  D : delete
+  R : rename / move
+  C-x C-q : vim 모드로 여러파일 이름 변화후 Z Z 하면 저장됨, 
+  S : symlinc
+  H : hardlink
+  Z : do compress tar.gz
+  c : compress selection to a specific file
+  X : do shell command =!=
+  m : mark
+  u : unmark
+  U : unmark all
+  t : invert mark
+  * : options
+  */ : select directories
+  %m : regex mark
+
+  - =dired-listing-switches:= try =-agho --group-directories-first= 디렉토리 후 파일 보이게 하는것
+  - dired single : dired buffer를 하나로 관리  
+  - 특정 확장자를 emacs가 아닌 다른 프로그램으로 열어서 exwm이 열게도 가능\
+
+  #+begin_src emacs-lisp
+    ;;mac built in ls does not support group-directories-first
+    ;;so brew install coreutils first
+    (setq insert-directory-program "gls" dired-use-ls-dired t)
+    (use-package dired-single)
+    (use-package dired
+      :ensure nil ;use-package가 install 안하게 함.
+      :commands (dired dired-jump)
+      :bind (("C-x C-j" . dired-jump))
+      :custom ((dired-listing-switches "-al --group-directories-first"))
+      :config
+      (evil-collection-define-key 'normal 'dired-mode-map
+        "h" 'dired-single-up-directory
+        "l" 'dired-single-buffer))
+    (use-package all-the-icons-dired
+      :if (display-graphic-p)
+      :hook (dired-mode . all-the-icons-dired-mode))
+    ;png파일은 feh라는 툴로 열고...
+    (use-package dired-open
+      :config
+      (setq dired-open-extensions '(("png" . "feh")
+                                    ("mkv" . "mpv"))))
+    ;hide dot files
+    (use-package dired-hide-dotfiles
+      :hook (dired-mode . dired-hide-dotfiles-mode)
+      :config
+      (evil-collection-define-key 'normal 'dired-mode-map
+        "H" 'dired-hide-dotfiles-mode))
+    
+  #+end_src
+
+    
 
 * basic configuration
 
@@ -141,9 +215,6 @@
     (unless (find-font (font-spec :name "all-the-icons"))
       (all-the-icons-install-fonts t)))
 
-  (use-package all-the-icons-dired
-    :if (display-graphic-p)
-    :hook (dired-mode . all-the-icons-dired-mode))
 
   (use-package doom-modeline
     :ensure t
@@ -197,9 +268,9 @@
   (general-create-definer my/leader-keys
     :keymaps '(normal insert visual emacs)
     ;:prefix "C-M"
-    :global-prefix "C-SPC")
-  (my/leader-keys
-   "ts" '(load-theme :which-key "choose theme")))
+    :global-prefix "C-SPC"))
+  ;(my/leader-keys
+  ; "ts" '(load-theme :which-key "choose theme")))
 
 (use-package undo-tree
   :init
@@ -520,6 +591,55 @@ npm i -g typescript-language-server; npm i -g typescript
 ;(dap-python-debugger 'debugpy)
 #+end_src
 
+* File/Dir Local Valiables
+Run =M-x normal-mode= to active
+특정 파일/디렉토리에 대한 세팅
+Two forms:
+#+begin_src emacs-lisp
+;; -*- mode: emacs-lisp; tab-width: 8; -*-
+#+end_src
+
+#+begin_src emacs-lisp
+  
+  ;; Local Variables:
+  ;; mode: emacs-lisp
+  ;; tab-width: 8
+  ;; eval; (eldoc-mode 0)
+  ;; End:
+  
+#+end_src
+
+Comands:
+- =add-dir-local-variable= : Add local variable to the files in the dir
+  파일 모드에 따라 file local variable을 다르게 설정가능
+  org-mode magit-diff-mode등
+  설정하면 .dir-locals.el파일에 모드별설정이 저장이 됨
+  
+- =add-file-local-variable= : Add local variable to the file
+  add전에 mode를 먼저 셋해야할수 있음
+- =delete-file-local-variable= :파일에 있는 변수 삭제
+- =copy-file-locals-to-dir-locals=
+  :  파일에 있는걸 디렉토리 쪽으로 복사
+- =copy-dir-locals-to-file-locals=
+  :  디렉토리 있는걸 파일로 복사
+- =projectile-edit-dir-locals=
+
+Variables:
+=safe-local-variable-values=
+=safe-local-eval-forms
+=enable-local-variable=
+- t 하면 add-file-local-variable 할때 safe하지 않으면 물어봄
+- nil하면 안하는거고
+- safe하면 safe한것만 됨
+- all 무조건 로드
+=enable-local-eval=
+- maybe하면 기본 프롬프트
+- t하면 자동 eval
+- nil하면 스킵
+  
+  
+
+
 
 * Org Mode
 
@@ -709,6 +829,11 @@ https://youtu.be/PNE-mgkZ6HM
 
 ** Org Alert
 - install 할때 org-plus-contrib가 있는지 보고 설치함
+- =DBUS ERROR=
+: eval &(dbus-launch)
+: export DBUS_SESSIN_BUS_ADDRESS
+: emacs
+
 - =org-notify-add= 확인
 #+begin_src emacs-lisp
   (use-package org
@@ -734,13 +859,19 @@ https://youtu.be/PNE-mgkZ6HM
 - M-x org-babel-execute-src-block
 - 단축키 블럭에 가서 C-c C-c
 
--  #+begin_src python :results output
--  #이렇게 하면 print한 결과가 result에 나옴
--  #+end_src
+- org-confirm-babel-evaluate nil 하면 실행시 팝업 띄울지 아니오로
+
+- file local value를 아래형태로 셋해서 저장할때 실행도 가능
+- (add-hook 'after-save-hook #'org-babel-execute-buffer t t)
+  -> t t가 이 버퍼만 셋하겠다는 의미?
+
+- #+begin_src python :results output
+- #이렇게 하면 print한 결과가 result에 나옴
+- #+end_src
 
 - #+begin_src python :results value
 - #이렇게 하면 return한 결과가 result에 나옴
--  #+end_src
+- #+end_src
 
 *** Tangle
 - #+PROPERTY: header-args:emacs-lisp :tangle ./init-new.el하면 모든 내용이 저 파일로 옮겨짐
@@ -829,9 +960,9 @@ https://youtu.be/PNE-mgkZ6HM
           eshell-buffer-maximum-lines 10000
           eshell-hist-ignoredups t
           eshell-scroll-to-bottom-on-input t))
-  
+
   (use-package eshell-git-prompt)
-  
+
   (use-package eshell
     :hook (eshell-first-time-mode . efs/configure-eshell)
     :config
