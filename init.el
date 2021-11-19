@@ -149,7 +149,8 @@
 
 ;;mac built in ls does not support group-directories-first
 ;;so brew install coreutils first
-(setq insert-directory-program "gls" dired-use-ls-dired t)
+(if (eq system-type 'darwin)
+    (setq insert-directory-program "gls" dired-use-ls-dired t))
 (use-package dired-single)
 (use-package dired
   :ensure nil ;use-package가 install 안하게 함.
@@ -246,14 +247,14 @@
 :bind ("M-/" . evilnc-comment-or-uncomment-lines))
 
 (use-package python-mode
-  ;:ensure nil
+  :ensure nil
   :hook (python-mode . lsp-deferred)
-  ;:custom
-  ;python-shell-interpreter "python3")
-  ;(dap-python-excutable "python3")
-  ;(dap-python-debugger 'debugpy)
-  ;:config
-  ;(require 'dap-python)
+  :custom
+  (python-shell-interpreter "python3")
+  (dap-python-excutable "python3")
+  (dap-python-debugger 'debugpy)
+  :config
+  (require 'dap-python)
 )
 
 (use-package pyvenv
@@ -307,6 +308,35 @@
 
 (use-package lsp-ivy)
 
+(use-package dap-mode
+  ;기존에는 dap-auto-configure-feature변수에 sessions locals breakpoints expressions controls tooltip다보임
+  ;그 중 몇개만 보려면 아래처럼 set
+  ;:custom
+  ;(dap-auto-configure-features '(sessions locals tooltip))
+
+  ;breakpoint걸릴때마다 hydra띄우기
+  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+
+;(dap-register-debug-template "My App"
+;  (list :type "python"
+;        :args "-i"
+;        :cwd nil ; project root 설정
+;        :env '(("DEBUG" . "1"))
+;        :target-module (expand-file-name "~/src/myapp/.env/bin/myapp")
+;        :request "launch"
+;        :name "My App"))
+;(dap-register-debug-template "Unit Test python"
+;  (list :type "python"
+;        :args "-i"
+;        :cwd nil ; project root 설정
+;        :env '(("DEBUG" . "1"))
+;        :target-module (expand-file-name "~/src/myapp/.env/bin/myapp")
+;        :request "launch"
+;        :name "My App"))
+
+;  breakpoint걸릴때마다 hydra띄우기
+;  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+
 ;(dap-python-debugger 'debugpy)
 
 ;; -*- mode: emacs-lisp; tab-width: 8; -*-
@@ -329,21 +359,23 @@
     :hook (org-mode . efs/org-mode-setup) ;훅을 쓰는 이유는 org buffer시작할때마다 위에설정 호출해서 그버퍼는 변수상태로 셋업하기 위함.
     :config
     (setq org-ellipsis " ▾" ; S-tab하면 ... 나오는걸 이걸로 바꾸기 위함
-          org-hide-emphasis-markers t)) ;bold link등 */같은거 안보이게
+          org-hide-emphasis-markers t) ;bold link등 */같은거 안보이게
     (setq org-agenda-start-with-log-mode t)
     (setq org-log-done 'time)
     (setq org-log-into-drawer t)
-    (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-          '("~/workspace/org/tasks.org"
-            "~/workspace/org/test.org")) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
 
-  ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
-  (setq org-todo-keywords
-        '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
-          (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
-  (setq org-refile-targets
-        '((nil :maxlevel . 1)
-         (org-agenda-files :maxlevel . 1)))
+    ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
+    (setq org-todo-keywords
+          '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
+            (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
+    (setq org-refile-targets
+          '((nil :maxlevel . 1)
+           (org-agenda-files :maxlevel . 1))))
+
+    (if (eq system-type 'darwin)
+        (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
+          '("~/workspace/org/tasks.org"
+            "~/workspace/org/test.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
 
 ;(advice-add 'org-refile :after 'org-save-all-org-buffers)
 ;이렇게 하면 org-refile실행시 바로 org-save-all-org-buffers가 실행이됨
@@ -461,12 +493,20 @@
 (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
 (add-to-list 'org-structure-template-alist '("py" . "src python"))
 
+(if (eq system-type 'darwin)
 ;이 파일을 저장하면 자동으로 tangle해서 저장하도록 하고싶다면
-(defun efs/org-babel-tangle-config ()
-  (when (string-equal (buffer-file-name)
+    (defun efs/org-babel-tangle-config ()
+      (when (string-equal (buffer-file-name)
                       (expand-file-name "/Users/eddie/.emacs.d/init.org"))
-    (let ((org-confirm-babel-evaluate nil))
-      (org-babel-tangle))))
+        (let ((org-confirm-babel-evaluate nil))
+          (org-babel-tangle)))))
+(if (eq system-type 'gnu/linux)
+;이 파일을 저장하면 자동으로 tangle해서 저장하도록 하고싶다면
+    (defun efs/org-babel-tangle-config ()
+      (when (string-equal (buffer-file-name)
+                      (expand-file-name "/home/hongiee/.emacs.d/init.org"))
+        (let ((org-confirm-babel-evaluate nil))
+          (org-babel-tangle)))))
  (add-hook 'org-mode-hook (lambda ()(add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 
 ;(push '("confi-unix" . confi-unix) org-src-lang-mode)
@@ -496,3 +536,5 @@
   :hook (eshell-first-time-mode . efs/configure-eshell)
   :config
   (eshell-git-prompt-use-theme 'powerline))
+
+sudo apt install emacs git fonts-firacode fonts-cantarell

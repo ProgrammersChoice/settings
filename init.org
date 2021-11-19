@@ -4,32 +4,34 @@
 #+html_head <link rel="stylesheet" type"text/css" href=""/>
 
 * basic shortcut
-
-  |----------------------+----------------------------|
-  | 명령어               | 단축키                     |
-  |----------------------+----------------------------|
-  | 텍스트 크기조절      | c-x c-0 누른 후 + 하거나 - |
-  |----------------------+----------------------------|
-  | 한줄실행             | c-x c-e                    |
-  |----------------------+----------------------------|
-  | 바로 실행            | m-: eval                   |
-  |----------------------+----------------------------|
-  | 명령어 찾기          | m-x                        |
-  |----------------------+----------------------------|
-  | 현재 단어 하이라이트 | m-s h .                    |
-  |----------------------+----------------------------|
-  | 정규식 하이라이트    | m-s h r                    |
-  |----------------------+----------------------------|
-  | 하이라이트 삭제      | m-s h u                    |
-  |----------------------+----------------------------|
-  | 파일 북마크 추가     | c-x r m                    |
-  |----------------------+----------------------------|
-  | bookmark jump        | c-x r b                    |
-  |----------------------+----------------------------|
-  | list bookmark        | c-x r l                    |
-  |----------------------+----------------------------|
-    rename-file
-    describe-bindings =C-h b=
+** 자주 쓰는 단축키
+|----------------------+----------------------------|
+| 명령어               | 단축키                     |
+|----------------------+----------------------------|
+| 텍스트 크기조절      | c-x c-0 누른 후 + 하거나 - |
+|----------------------+----------------------------|
+| 한줄실행             | c-x c-e                    |
+|----------------------+----------------------------|
+| 바로 실행            | m-: eval                   |
+|----------------------+----------------------------|
+| 명령어 찾기          | m-x                        |
+|----------------------+----------------------------|
+| 현재 단어 하이라이트 | m-s h .                    |
+|----------------------+----------------------------|
+| 정규식 하이라이트    | m-s h r                    |
+|----------------------+----------------------------|
+| 하이라이트 삭제      | m-s h u                    |
+|----------------------+----------------------------|
+| 파일 북마크 추가     | c-x r m                    |
+|----------------------+----------------------------|
+| bookmark jump        | c-x r b                    |
+|----------------------+----------------------------|
+| list bookmark        | c-x r l                    |
+|----------------------+----------------------------|
+| org export           | C-c C-e h h                |
+|----------------------+----------------------------|
+  rename-file
+  describe-bindings =C-h b=
 
 ** dired 사용법
 - =C-x d= 가 단축키
@@ -65,13 +67,8 @@
   * : options
   */ : select directories
   %m : regex mark
-
-
-
-    
-
+  
 * basic configuration
-
 ** clean up emacs user interface, make it minimal.
 
 #+begin_src emacs-lisp
@@ -141,7 +138,6 @@
 #+end_src
 
 * interface settings
-
 ** set font 
 
 #+begin_src emacs-lisp
@@ -284,33 +280,34 @@
   - 특정 확장자를 emacs가 아닌 다른 프로그램으로 열어서 exwm이 열게도 가능\
 
 #+begin_src emacs-lisp
-    ;;mac built in ls does not support group-directories-first
-    ;;so brew install coreutils first
-    (setq insert-directory-program "gls" dired-use-ls-dired t)
-    (use-package dired-single)
-    (use-package dired
-      :ensure nil ;use-package가 install 안하게 함.
-      :commands (dired dired-jump)
-      :bind (("C-x C-j" . dired-jump))
-      :custom ((dired-listing-switches "-al --group-directories-first"))
-      :config
-      (evil-collection-define-key 'normal 'dired-mode-map
-        "h" 'dired-single-up-directory
-        "l" 'dired-single-buffer))
-    (use-package all-the-icons-dired
-      :if (display-graphic-p)
-      :hook (dired-mode . all-the-icons-dired-mode))
-    ;png파일은 feh라는 툴로 열고...
-    (use-package dired-open
-      :config
-      (setq dired-open-extensions '(("png" . "feh")
-                                    ("mkv" . "mpv"))))
-    ;hide dot files
-    (use-package dired-hide-dotfiles
-      :hook (dired-mode . dired-hide-dotfiles-mode)
-      :config
-      (evil-collection-define-key 'normal 'dired-mode-map
-        "H" 'dired-hide-dotfiles-mode))
+  ;;mac built in ls does not support group-directories-first
+  ;;so brew install coreutils first
+  (if (eq system-type 'darwin)
+      (setq insert-directory-program "gls" dired-use-ls-dired t))
+  (use-package dired-single)
+  (use-package dired
+    :ensure nil ;use-package가 install 안하게 함.
+    :commands (dired dired-jump)
+    :bind (("C-x C-j" . dired-jump))
+    :custom ((dired-listing-switches "-al --group-directories-first"))
+    :config
+    (evil-collection-define-key 'normal 'dired-mode-map
+      "h" 'dired-single-up-directory
+      "l" 'dired-single-buffer))
+  (use-package all-the-icons-dired
+    :if (display-graphic-p)
+    :hook (dired-mode . all-the-icons-dired-mode))
+  ;png파일은 feh라는 툴로 열고...
+  (use-package dired-open
+    :config
+    (setq dired-open-extensions '(("png" . "feh")
+                                  ("mkv" . "mpv"))))
+  ;hide dot files
+  (use-package dired-hide-dotfiles
+    :hook (dired-mode . dired-hide-dotfiles-mode)
+    :config
+    (evil-collection-define-key 'normal 'dired-mode-map
+      "H" 'dired-hide-dotfiles-mode))
 #+end_src
 
 ** easy motion
@@ -320,7 +317,6 @@
     (use-package avy)
     (global-set-key (kbd "C-'") 'avy-goto-char-2)
 #+end_src
-
 
 ** evil mc 멀티커서
 #+begin_src emacs-lisp
@@ -348,7 +344,6 @@
 #+end_src
 
 * Completion System
-
 ** Vertico
 
 #+begin_src emacs-lisp
@@ -379,7 +374,6 @@
 #+end_src
 
 * Coding Environment
-
 ** Projectile
 
 - projectile파일을 폴더에 넣으면 프로젝트로 인식함 .git이 있어도 됨
@@ -419,7 +413,6 @@
 #+end_src
 
 ** Language Modes
-
 *** python-mode
 
 - ensure nil의 의미는 use-package가 python-mode를 인스톨 하지 않게 함.
@@ -429,14 +422,14 @@
 
 #+begin_src emacs-lisp
   (use-package python-mode
-    ;:ensure nil
+    :ensure nil
     :hook (python-mode . lsp-deferred)
-    ;:custom
-    ;python-shell-interpreter "python3")
-    ;(dap-python-excutable "python3")
-    ;(dap-python-debugger 'debugpy)
-    ;:config
-    ;(require 'dap-python)
+    :custom
+    (python-shell-interpreter "python3")
+    (dap-python-excutable "python3")
+    (dap-python-debugger 'debugpy)
+    :config
+    (require 'dap-python)
   )
 
 #+end_src
@@ -465,7 +458,6 @@ Commands:
   :config
   (setq typescript-indent-level 2))
 #+end_src
-
 
 ** lsp-mode
 - 기본 키는 window - l 같은 키여서 =C-c l= 로 바꿈
@@ -579,6 +571,81 @@ npm i -g typescript-language-server; npm i -g typescript
   (use-package lsp-ivy)
   #+end_src
 
+** dap-mode
+- Reference : https://emacs-lsp.github.io/dap-mode/page/confiruration/
+
+#+begin_src emacs-lisp
+  (use-package dap-mode
+    ;기존에는 dap-auto-configure-feature변수에 sessions locals breakpoints expressions controls tooltip다보임
+    ;그 중 몇개만 보려면 아래처럼 set
+    ;:custom
+    ;(dap-auto-configure-features '(sessions locals tooltip))
+
+    ;breakpoint걸릴때마다 hydra띄우기
+    :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+#+end_src
+
+*** BASIC
+- dap-debug : 디버그 실행 시작
+- dap-next : step over
+- dap-continue : continue
+- dap-breakpoint-toggle : break point걸기
+- dap-debug-last : 디버그 실행 재시작
+- dap-switch-stack-frame : call stack에서 어디로 점프할지
+- dap-disconnect : stop 디버깅
+- dap-debug-restart : stop하고 바로 start한 효과
+- dap-debug-recent : 최신 디버그 컨피그로 시작
+- dap-ui-breakpoints : breakpoint 보여줌
+- dap-ui-locals : locals 보여줌
+- dap-ui-sessions : 현재 active인 디버그 세션 보여줌 : C-z로 evil에서 빠져나온 후 S-d로 세션 삭제 가능
+- dap-debug-edit-template : 언어마다 템플릿 정할수 있는데 정한걸 이걸로 선택함
+- dap-register-debug-template : 요걸로 템플릿을 정함 
+
+- 아래 코드를 github에 debug.el같은데 같이 올리는것도 방법 그후 C-x C-e 로 eval시킬수 있음
+- 상세 옵션은 vscode doc for debugger에서 볼 수 있음
+#+begin_src emacs-lisp
+;(dap-register-debug-template "My App"
+;  (list :type "python"
+;        :args "-i"
+;        :cwd nil ; project root 설정
+;        :env '(("DEBUG" . "1"))
+;        :target-module (expand-file-name "~/src/myapp/.env/bin/myapp")
+;        :request "launch"
+;        :name "My App"))
+;(dap-register-debug-template "Unit Test python"
+;  (list :type "python"
+;        :args "-i"
+;        :cwd nil ; project root 설정
+;        :env '(("DEBUG" . "1"))
+;        :target-module (expand-file-name "~/src/myapp/.env/bin/myapp")
+;        :request "launch"
+;        :name "My App"))
+#+end_src
+
+*** BreakPoint : 언어마다 지원하는게 다름
+- dap-breakpoint-toggle : breakpoint 만들기
+- dap-breakpoint-delete-all : breakpoint 전체 삭제
+- dap-breakpoint-condition : conditional breakpoint
+- dap-breakpoint-hit-conditions : hit conditions, number of hits before breakpoint stops 그 자리에 몇번 지나갔는지
+- dap-breakpoint-log-message : 해당 breakpoint에서 멈추지 않고 정한 로그 출력 {}사용
+- dap-ui-breakpoints : show breakpoint panel
+*** Hydra
+- dap-hydra : 단축키로 step등 쉽게하기
+#+begin_src emacs-lisp
+;  breakpoint걸릴때마다 hydra띄우기
+;  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+#+end_src
+*** Expressions
+- dap-ui-expressions-add : i 처럼 특정 변수 보는 watch창
+- dap-ui-expressions-remove : 삭제
+*** REPL
+- dap-ui-repl : 해당 언어에서 간단한 코드 실행 함수실행, 변수값 보기 바꾸기 i+5
+*** Tooltips
+- dap-tooltip-mode : turns it on 변수에 마우스 올리면 변수값등이 pop up발생하는것 등
+- dap-tooltip-at-point : show the value at the current point 현재 위치 팝업을 강제로 띄우는 방식
+*** load vscode debug config
+- dap-debug 실행할때 vscode debug config도 동작함
+
 ** debugging
 *** python debugging
 
@@ -635,13 +702,8 @@ Variables:
 - maybe하면 기본 프롬프트
 - t하면 자동 eval
 - nil하면 스킵
-  
-  
-
-
 
 * Org Mode
-
 ** 기본 사용법
 - head
   *는 첫째 head , =C-<return>= 새로운 아이템을 추가함 동일레벨로, =M-<ret>= 도 동일 대신위
@@ -670,8 +732,6 @@ Variables:
  TODO는 heading에서 todo입력하면 됨 =C-c C-t= 하면 done으로 바뀜 S-방향키 해도 됨
 
 ** Org 단축키
-
-https://youtu.be/PNE-mgkZ6HM
 - org-agenda org-agenda-list
 - org-schedule삽입 =C-c C-s= shift누르고 방향키 한담에 <ret>
 - org-todo 상태변경 =C-c C-t=
@@ -686,11 +746,8 @@ https://youtu.be/PNE-mgkZ6HM
 - org-agenda-custom-commands, org-tag-alist같은 패키지들로 태그 관리가능.
 - org-set-effort 
 - org-set-properties effort 5 days =C-c C-x p=
-;DONE을 제거하는 방법
-
+  
 ** 기본 설정
-
-강의 https://youtu.be/VcgjTEa0kU4
 
 #+begin_src emacs-lisp
   (defun efs/org-mode-setup()
@@ -709,22 +766,24 @@ https://youtu.be/PNE-mgkZ6HM
       :hook (org-mode . efs/org-mode-setup) ;훅을 쓰는 이유는 org buffer시작할때마다 위에설정 호출해서 그버퍼는 변수상태로 셋업하기 위함.
       :config
       (setq org-ellipsis " ▾" ; S-tab하면 ... 나오는걸 이걸로 바꾸기 위함
-            org-hide-emphasis-markers t)) ;bold link등 */같은거 안보이게
+            org-hide-emphasis-markers t) ;bold link등 */같은거 안보이게
       (setq org-agenda-start-with-log-mode t)
       (setq org-log-done 'time)
       (setq org-log-into-drawer t)
-      (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
+  
+      ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
+      (setq org-todo-keywords
+            '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
+              (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
+      (setq org-refile-targets
+            '((nil :maxlevel . 1)
+             (org-agenda-files :maxlevel . 1))))
+
+      (if (eq system-type 'darwin)
+          (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
             '("~/workspace/org/tasks.org"
-              "~/workspace/org/test.org")) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
-
-    ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
-    (setq org-todo-keywords
-          '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
-            (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
-    (setq org-refile-targets
-          '((nil :maxlevel . 1)
-           (org-agenda-files :maxlevel . 1)))
-
+              "~/workspace/org/test.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
+  
   ;(advice-add 'org-refile :after 'org-save-all-org-buffers)
   ;이렇게 하면 org-refile실행시 바로 org-save-all-org-buffers가 실행이됨
 #+end_src
@@ -853,7 +912,6 @@ https://youtu.be/PNE-mgkZ6HM
 #+end_src
 
 ** Org Babel 
-
 *** 코드블럭 실행
 - M-x org-babel-execute-src-block
 - 단축키 블럭에 가서 C-c C-c
@@ -887,23 +945,31 @@ https://youtu.be/PNE-mgkZ6HM
    'org-babel-load-languages
    '((emacs-lisp . t)
      (python . t)))
-
-
+  
+  
   (setq org-confirm-babel-evaluate nil) ;;실행할지 묻는거 끄기
   (setq org-babel-python-command "python3") ;;python3써라
-
+  
   ;;<py 입력후 탭 하면 블록이 생김
   (require 'org-tempo)
   (add-to-list 'org-structure-template-alist '("sh" . "src shell"))
   (add-to-list 'org-structure-template-alist '("el" . "src emacs-lisp"))
   (add-to-list 'org-structure-template-alist '("py" . "src python"))
-
+  
+  (if (eq system-type 'darwin)
   ;이 파일을 저장하면 자동으로 tangle해서 저장하도록 하고싶다면
-  (defun efs/org-babel-tangle-config ()
-    (when (string-equal (buffer-file-name)
+      (defun efs/org-babel-tangle-config ()
+        (when (string-equal (buffer-file-name)
                         (expand-file-name "/Users/eddie/.emacs.d/init.org"))
-      (let ((org-confirm-babel-evaluate nil))
-        (org-babel-tangle))))
+          (let ((org-confirm-babel-evaluate nil))
+            (org-babel-tangle)))))
+  (if (eq system-type 'gnu/linux)
+  ;이 파일을 저장하면 자동으로 tangle해서 저장하도록 하고싶다면
+      (defun efs/org-babel-tangle-config ()
+        (when (string-equal (buffer-file-name)
+                        (expand-file-name "/home/hongiee/.emacs.d/init.org"))
+          (let ((org-confirm-babel-evaluate nil))
+            (org-babel-tangle)))))
    (add-hook 'org-mode-hook (lambda ()(add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 #+end_src
 
@@ -919,7 +985,6 @@ https://youtu.be/PNE-mgkZ6HM
   #+end_src
 
 *** Noweb
-
 - 블럭의 결과를 다른 블럭에 쓰거나 할때 씀 json이나 txt파일들을 쓸때도 씀.
 - :noweb yes하면 값을 가져올 수 있음
 
@@ -969,5 +1034,13 @@ https://youtu.be/PNE-mgkZ6HM
   
 #+end_src
 
+* EXWM
+- 우분투 셋업 방법
+#+begin_src emacs-lisp
+sudo apt install emacs git fonts-firacode fonts-cantarell
+#+end_src
+
 * 각종 팁
  - system-type변수에는 현재 환경이 windows인지 등이 나옴
+ - package-refresh-contents : 패키지 없다고 할때 해주면 됨
+   
