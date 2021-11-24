@@ -503,8 +503,8 @@
 (if (eq system-type 'gnu/linux)
 ;이 파일을 저장하면 자동으로 tangle해서 저장하도록 하고싶다면
     (defun efs/org-babel-tangle-config ()
-      (when (string-equal (buffer-file-name)
-                      (expand-file-name "/home/hongiee/.emacs.d/init.org"))
+      (when (string-equal (file-name-directory (buffer-file-name))
+                      (expand-file-name "~/.emacs.d/"))
         (let ((org-confirm-babel-evaluate nil))
           (org-babel-tangle)))))
  (add-hook 'org-mode-hook (lambda ()(add-hook 'after-save-hook #'efs/org-babel-tangle-config)))

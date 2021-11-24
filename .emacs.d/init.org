@@ -1,7 +1,20 @@
 #+title: emacs configuration
-#+property: header-args:emacs-lisp :tangle /home/hongiee/.emacs.d/init.el :mkdirp yes
+#+property: header-args:emacs-lisp :tangle ./init.el :mkdirp yes
 #+options: num:nil
 #+html_head <link rel="stylesheet" type"text/css" href=""/>
+* emacs install
+#+begin_src shell
+  sudo apt update
+  sudo apt upgrade -y && sudo apt autoremove -y
+  sudo apt-get install libutils
+  sudo apt-get install libutil
+  sudo apt-get install ubuntu-desktop
+  sudo apt-get install indicator-appmenu-tools
+  ./configure --with-native-compilation --with-mailutils --vterm-module
+  sudo apt install libtool-bin
+  sudo apt install arandr
+  emacs -q -nw #cmd로 실행
+#+end_src
 
 * basic shortcut
 ** 자주 쓰는 단축키
@@ -35,6 +48,7 @@
 | async shell          | win-&                    |
 |----------------------+----------------------------|
   rename-file
+  M-x check-parens : init.el디버깅
   describe-bindings =C-h b=
   M-x proced =x= send signal
   (start-process-shell-command "tool" nil "vim ~/test.txt") : 비동기로 출력없이 실행
@@ -972,8 +986,8 @@ Variables:
   (if (eq system-type 'gnu/linux)
   ;이 파일을 저장하면 자동으로 tangle해서 저장하도록 하고싶다면
       (defun efs/org-babel-tangle-config ()
-        (when (string-equal (buffer-file-name)
-                        (expand-file-name "/home/hongiee/.emacs.d/init.org"))
+        (when (string-equal (file-name-directory (buffer-file-name))
+                        (expand-file-name "~/.emacs.d/"))
           (let ((org-confirm-babel-evaluate nil))
             (org-babel-tangle)))))
    (add-hook 'org-mode-hook (lambda ()(add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
@@ -1061,23 +1075,19 @@ sudo apt install emacs git fonts-firacode fonts-cantarell
 - exwm-floating-toggle-floting =C-c C-t C-f=
 - exwm-layout-toggle-fullscreen 
 - exwm-layout-set-fullscreen =C-c C-f= 특징은 키들도 안먹음
-
 ** workspaces
 - s+(0-9) 워크 스페이스 스위치
 - s+w 워크 스페이스 선택 + - 하면 추가도 됨
 - C-c RET : 다른 워크스페이스로 이동
 ** emac resolution
 arandr : sudo apt install arandr
-** Screen DPI
-- dpi가 너무 높아서 글이 작을때
-  =~/.emacs.d/exwm/Xresources=
-  #+begin_src shell
-Xft.dpi: 180 #set this to your desired DPI! large number means bigger text and UI
-  #+end_src
 
-  add this to =start-exwm.sh= Make sure =xrdb= is installed
+** System tray
+- s-& nm-applet
 
-
+** System tray
+- C-q C-c : copy firefox등에서
+  
 #+begin_src emacs-lisp
   ;버퍼 이름을 프로그램 이름으로 하는 함수
   (defun efs/exwm-update-class ()
@@ -1158,7 +1168,37 @@ Xft.dpi: 180 #set this to your desired DPI! large number means bigger text and U
 
 #+RESULTS:
 : t
+* Desktop Environment
+** 로그인시 exwm 보이게
+#+begin_src sh :tnagle no
+sudo ln -f ~/.emacs.d/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
+#+end_src
 
+#+begin_src shell :tangle ./exwm/EXWM.desktop :mkdirp yes
+[Desktop Entry]
+Name=EXWM
+Comment=Emacs Window Manager
+Exec=sh /home/hongiee/.emacs.d/exwm/start-exwm.sh
+TryExec=sh
+Type=Application
+X-LighDM-DesktopName=exwm
+DesktopNames=exwm
+#+end_src
+
+** Screen DPI
+- dpi가 너무 높아서 글이 작을때
+  =~/.emacs.d/exwm/Xresources=
+  #+begin_src shell
+Xft.dpi: 180 #set this to your desired DPI! large number means bigger text and UI
+  #+end_src
+
+  add this to =start-exwm.sh= Make sure =xrdb= is installed
+  #+begin_src shell :tangle ./exwm/start-exwm.sh :shebang #!/bin/sh
+    
+    #xrdb ~/.emacs.d/exwm/Xresources
+    exec dbus-launch --exit-with-session emacs -mm --debug-init
+    
+  #+end_src
 * 각종 팁
  - system-type변수에는 현재 환경이 windows인지 등이 나옴
  - package-refresh-contents : 패키지 없다고 할때 해주면 됨
