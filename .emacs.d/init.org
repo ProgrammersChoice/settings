@@ -11,8 +11,11 @@
   sudo apt-get install ubuntu-desktop
   sudo apt-get install indicator-appmenu-tools
   ./configure --with-native-compilation --with-mailutils --vterm-module
-  sudo apt install libtool-bin
-  sudo apt install arandr
+  sudo apt install libtool-bin #vterm설치용
+  sudo apt install compton  #스크롤 부드럽게
+  sudo apt install feh #백그라운드 설정
+  sudo apt install arandr #해상도 조절
+  sudo apt install scrot brightnessctl playerctl #스크린샷, 밝기컨트롤, 오디오 컨트롤
   emacs -q -nw #cmd로 실행
 #+end_src
 
@@ -93,19 +96,27 @@
 
 #+begin_src emacs-lisp
   (setq inhibit-startup-message t)
-
+  
   ;(unless dw/is-termux
   (scroll-bar-mode -1)        ; disable visible scrollbar
   (tool-bar-mode -1)          ; disable the toolbar
   (tooltip-mode -1)           ; disable tooltips
   (set-fringe-mode 10)       ; give some breathing room
-
+  
   (menu-bar-mode -1)            ; disable the menu bar
-
+  
   ;; set up the visible bell
   (setq visible-bell nil)
   (setq ring-bell-function 'ignore)
-
+  
+  ;; adjust font size
+  (defvar efs/default-font-size 180)
+  
+  ;; set frame transparency
+  (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
+  (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
+  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
 #+end_src
 
 ** package setup
@@ -161,7 +172,7 @@
 ** set font 
 
 #+begin_src emacs-lisp
-  (set-face-attribute 'default nil :family "d2coding" :height 130)
+  (set-face-attribute 'default nil :family "d2coding" :height 180)
   (setq default-input-method "korean-hangul")
   (set-fontset-font t 'hangul (font-spec :name "d2coding"))
 #+end_src
@@ -1054,151 +1065,6 @@ Variables:
   
 #+end_src
 
-* EXWM
-** setup
-- https://github.com/ch11ng/exwm
-- 우분투 셋업 방법
-  - desktop file을 만들면 되는데, session type을 정의 login manager(gdm)등이 알도록
-#+begin_src sh
-sudo apt install emacs git fonts-firacode fonts-cantarell
-#+end_src
-
-- =~/.emacs.d/exwm/EXWM.desktop=
-- =~/.emacs.d/exwm/exwm.sh=
-- sudo ln -f ~/.emacs.d/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
-  window manager가 정상적으로 동작하도록 
-
-** managing windows
-- M-& launch a process asynchronously
-- s-& launch without popup(counsel-linux-app)
-- windmove-swap-states-left/right/up/down : 윈도우 위치 이동
-- exwm-floating-toggle-floting =C-c C-t C-f=
-- exwm-layout-toggle-fullscreen 
-- exwm-layout-set-fullscreen =C-c C-f= 특징은 키들도 안먹음
-** workspaces
-- s+(0-9) 워크 스페이스 스위치
-- s+w 워크 스페이스 선택 + - 하면 추가도 됨
-- C-c RET : 다른 워크스페이스로 이동
-** emac resolution
-arandr : sudo apt install arandr
-
-** System tray
-- s-& nm-applet
-
-** System tray
-- C-q C-c : copy firefox등에서
-  
-#+begin_src emacs-lisp
-  ;버퍼 이름을 프로그램 이름으로 하는 함수
-  (defun efs/exwm-update-class ()
-    (exwm-workspace-rename-buffer exwm-class-name))
-  
-  (use-package exwm
-    :config
-    ;; Set the default number of workspaces
-    (setq exwm-workspace-number 5)
-  
-    ;; When window "class" updates, use it to set the buffer name
-    (add-hook 'exwm-update-class-hook #'efs/exwm-update-class)
-  
-    ;; Rebind CapsLock to Ctrl
-    ;(start-process-shell-command "xmodmap" nil "xmodmap ~/.emacs.d/exwm/Xmodmap")
-    (require 'exwm-randr)
-    (exwm-randr-enable)
-    (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 1920x1200 --pos 0x0 --rotate normal")
-  
-    ;; Set the screen resolution (update this to be the correct resolution for your screen!)
-    (require 'exwm-randr)
-    (exwm-randr-enable)
-    ;; (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2048x1152 --pos 0x0 --rotate normal")
-  
-    ;; Load the system tray before exwm-init
-    (require 'exwm-systemtray)
-    (exwm-systemtray-enable)
-  
-    ;; These keys should always pass through to Emacs
-    (setq exwm-input-prefix-keys
-      '(?\C-x
-        ?\C-u
-        ?\C-h
-        ?\M-x
-        ?\M-`
-        ?\M-&
-        ?\M-:
-        ?\C-\M-j  ;; Buffer list
-        ?\C-\ ))  ;; Ctrl+Space
-  
-    ;; Ctrl+Q will enable the next key to be sent directly
-    (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
-  
-    ;; Set up global key bindings.  These always work, no matter the input state!
-    ;; Keep in mind that changing this list after EXWM initializes has no effect.
-    (setq exwm-input-global-keys
-          `(
-            ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
-            ([?\s-r] . exwm-reset)
-  
-            ;; Move between windows
-            ([s-left] . windmove-left)
-            ([s-right] . windmove-right)
-            ([s-up] . windmove-up)
-            ([s-down] . windmove-down)
-  
-           ;; Launch applications via shell command
-            ([?\s-&] . (lambda (command)
-                         (interactive (list (read-shell-command "$ ")))
-                         (start-process-shell-command command nil command)))
-  
-            ;; Switch workspace
-            ([?\s-w] . exwm-workspace-switch)
-            ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
-  
-            ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
-            ,@(mapcar (lambda (i)
-                        `(,(kbd (format "s-%d" i)) .
-                          (lambda ()
-                            (interactive)
-                            (exwm-workspace-switch-create ,i))))
-                      (number-sequence 0 9))))
-  
-    (exwm-enable))
-  
-  
-#+end_src
-
-#+RESULTS:
-: t
-* Desktop Environment
-** 로그인시 exwm 보이게
-#+begin_src sh :tnagle no
-sudo ln -f ~/.emacs.d/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
-#+end_src
-
-#+begin_src shell :tangle ./exwm/EXWM.desktop :mkdirp yes
-[Desktop Entry]
-Name=EXWM
-Comment=Emacs Window Manager
-Exec=sh /home/hongiee/.emacs.d/exwm/start-exwm.sh
-TryExec=sh
-Type=Application
-X-LighDM-DesktopName=exwm
-DesktopNames=exwm
-#+end_src
-
-** Screen DPI
-- dpi가 너무 높아서 글이 작을때
-  =~/.emacs.d/exwm/Xresources=
-  #+begin_src shell
-Xft.dpi: 180 #set this to your desired DPI! large number means bigger text and UI
-  #+end_src
-
-  add this to =start-exwm.sh= Make sure =xrdb= is installed
-  #+begin_src shell :tangle ./exwm/start-exwm.sh :shebang #!/bin/sh
-    
-    #xrdb ~/.emacs.d/exwm/Xresources
-    exec dbus-launch --exit-with-session emacs -mm --debug-init
-    
-  #+end_src
 * 각종 팁
  - system-type변수에는 현재 환경이 windows인지 등이 나옴
  - package-refresh-contents : 패키지 없다고 할때 해주면 됨

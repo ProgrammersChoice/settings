@@ -1,0 +1,211 @@
+#+title: emacs configuration
+#+property: header-args:emacs-lisp :tangle ./desktop.el :mkdirp yes
+* EXWM
+** setup
+- https://github.com/ch11ng/exwm
+- 우분투 셋업 방법
+  - desktop file을 만들면 되는데, session type을 정의 login manager(gdm)등이 알도록
+#+begin_src sh
+sudo apt install emacs git fonts-firacode fonts-cantarell
+#+end_src
+
+- =~/.emacs.d/exwm/EXWM.desktop=
+- =~/.emacs.d/exwm/exwm.sh=
+- sudo ln -f ~/.emacs.d/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
+  window manager가 정상적으로 동작하도록 
+
+** managing windows
+- M-& launch a process asynchronously
+- s-& launch without popup(counsel-linux-app)
+- windmove-swap-states-left/right/up/down : 윈도우 위치 이동
+- exwm-floating-toggle-floting =C-c C-t C-f=
+- exwm-layout-toggle-fullscreen 
+- exwm-layout-set-fullscreen =C-c C-f= 특징은 키들도 안먹음
+** workspaces
+- s+(0-9) 워크 스페이스 스위치
+- s+w 워크 스페이스 선택 + - 하면 추가도 됨
+- C-c RET : 다른 워크스페이스로 이동
+** emac resolution
+arandr : sudo apt install arandr
+
+** System tray
+- C-q C-c : copy firefox등에서
+  #+begin_src shell
+  sudo apt install blueman pasystray pavucontrol #bt컨트롤, 볼륨컨트롤pavucontrol 그냥실행하면 ui로 뜸
+  #+end_src
+  
+#+begin_src emacs-lisp
+  
+  (defun efs/run-in-background (command)
+    (let ((command-parts (split-string command "[ ]+")))
+      (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
+  
+    ;; --bg-scale은 전체를 체우겠다는 의미
+  (defun efs/set-wallpaper()
+    (interactive)
+    (start-process-shell-command "feh" nil "feh --bg-scale /usr/share/backgrounds/joshua-coleman-something-yellow.jpg"))
+
+  (defun efs/exwm-init-hook ()
+    ;; Make workspace 1 be the one where we land at startup
+    (exwm-workspace-switch-create 1)
+    (efs/run-in-background "nm-applet")
+    (efs/run-in-background "pasystray")
+    (efs/run-in-background "blueman-applet"))
+  ;버퍼 이름을 프로그램 이름으로 하는 함수
+  (defun efs/exwm-update-class ()
+    (exwm-workspace-rename-buffer exwm-class-name))
+  
+  (use-package exwm
+    :config
+    ;; Set the default number of workspaces
+    (setq exwm-workspace-number 5)
+  
+    ;; When window "class" updates, use it to set the buffer name
+    (add-hook 'exwm-update-class-hook #'efs/exwm-update-class)
+  
+  
+    ;; Rebind CapsLock to Ctrl
+    ;(start-process-shell-command "xmodmap" nil "xmodmap ~/.emacs.d/exwm/Xmodmap")
+    (require 'exwm-randr)
+    (exwm-randr-enable)
+    (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2560x1600 --pos 0x0 --rotate normal")
+  
+    ;; set wallpaper after changing resolution
+    (efs/set-wallpaper)
+  
+    ;; Set the screen resolution (update this to be the correct resolution for your screen!)
+    (require 'exwm-randr)
+    (exwm-randr-enable)
+    ;; (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2048x1152 --pos 0x0 --rotate normal")
+  
+    ;; Load the system tray before exwm-init
+    (require 'exwm-systemtray)
+    (exwm-systemtray-enable)
+  
+    ;; These keys should always pass through to Emacs
+    (setq exwm-input-prefix-keys
+      '(?\C-x
+        ?\C-u
+        ?\C-h
+        ?\M-x
+        ?\M-`
+        ?\M-&
+        ?\M-:
+        ?\C-\M-j  ;; Buffer list
+        ?\C-\ ))  ;; Ctrl+Space
+  
+    ;; Ctrl+Q will enable the next key to be sent directly
+    (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
+  
+    ;; Set up global key bindings.  These always work, no matter the input state!
+    ;; Keep in mind that changing this list after EXWM initializes has no effect.
+    (setq exwm-input-global-keys
+          `(
+            ;; Reset to line-mode (C-c C-k switches to char-mode via exwm-input-release-keyboard)
+            ([?\s-r] . exwm-reset)
+  
+            ;; Move between windows
+            ([s-left] . windmove-left)
+            ([s-right] . windmove-right)
+            ([s-up] . windmove-up)
+            ([s-down] . windmove-down)
+  
+           ;; Launch applications via shell command
+            ([?\s-&] . (lambda (command)
+                         (interactive (list (read-shell-command "$ ")))
+                         (start-process-shell-command command nil command)))
+  
+            ;; Switch workspace
+            ([?\s-w] . exwm-workspace-switch)
+            ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+  
+            ;; 's-N': Switch to certain workspace with Super (Win) plus a number key (0 - 9)
+            ,@(mapcar (lambda (i)
+                        `(,(kbd (format "s-%d" i)) .
+                          (lambda ()
+                            (interactive)
+                            (exwm-workspace-switch-create ,i))))
+                      (number-sequence 0 9))))
+  
+    (exwm-enable))
+  
+  
+#+end_src
+
+#+RESULTS:
+: t
+
+* Desktop Environment
+** Desktop key bindings
+- M-x Customize-group desktop-environment : 여기가면 밝기나 여러 설정들 가능함
+- M-x desktop-environment : 여기가면 밝기나 여러 설정들 가능함
+  #+begin_src shell
+sudo apt install scrot brightnessctl playerctl
+  #+end_src
+
+#+begin_src emacs-lisp
+(use-package desktop-environment
+  :after exwm
+  :config (desktop-environment-mode)
+  :custom
+  (desktop-environment-brightness-small-increment "2%+")
+  (desktop-environment-brightness-small-decrement "2%-")
+  (desktop-environment-brightness-normal-increment "5%+")
+  (desktop-environment-brightness-normal-decrement "5%-"))
+#+end_src
+** 로그인시 exwm 보이게
+#+begin_src sh :tnagle no
+sudo ln -f ~/.emacs.d/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
+#+end_src
+
+#+begin_src shell :tangle ./exwm/EXWM.desktop :mkdirp yes
+[Desktop Entry]
+Name=EXWM
+Comment=Emacs Window Manager
+Exec=sh /home/hongiee/.emacs.d/exwm/start-exwm.sh
+TryExec=sh
+Type=Application
+X-LighDM-DesktopName=exwm
+DesktopNames=exwm
+#+end_src
+
+** Screen DPI
+- dpi가 너무 높아서 글이 작을때
+  =~/.emacs.d/exwm/Xresources=
+  #+begin_src shell
+  #set this to your desired DPI! large number means bigger text and UI
+  Xft.dpi: 180
+  #+end_src
+
+  add this to =start-exwm.sh= Make sure =xrdb= is installed
+  #+begin_src shell :tangle ./exwm/start-exwm.sh :shebang #!/bin/sh
+    
+    #xrdb ~/.emacs.d/exwm/Xresources
+    exec dbus-launch --exit-with-session emacs -mm --debug-init -l ~/.emacs.d/desktop.el
+    
+  #+end_src
+* Setting a background image
+- compton이라는 graphic solution
+- install compton(picom can be a better solution)
+ #+begin_src shell
+   sudo apt install compton
+   compton &
+ #+end_src
+
+- background image 설정
+#+begin_src shell
+  sudo apt install feh
+  feh --bg-scale /usr/share/backgrounds/matt-mcnulty-nyc-2nd-ave.jpg
+#+end_src
+
+- 그리고 emacs.org에 투명화 관련 설정
+  ;; set frame transparency
+- 그리고 백그라운드 이미지를 feh로 설정
+* Mode line mode
+#+begin_src emacs-lisp
+  ;modeline에 정보 보여주기
+  (display-battery-mode 1)
+  (setq display-time-day-and-date t)
+  ;(setq dislpay-time-format "%m/%d/%y")
+  (display-time-mode 1)
+#+end_src
