@@ -16,7 +16,11 @@
   sudo apt install feh #백그라운드 설정
   sudo apt install arandr #해상도 조절
   sudo apt install scrot brightnessctl playerctl #스크린샷, 밝기컨트롤, 오디오 컨트롤
+  sudo apt install blueman pasystray pavucontrol #bt컨트롤
+  sudo apt install slock xss-lock #화면잠금
+  sudo apt install xsel #클립보드 복사 $xsel --clipboard < sadf.txt  반대는 > text.txt
   emacs -q -nw #cmd로 실행
+  
 #+end_src
 
 * basic shortcut
@@ -28,7 +32,7 @@
 |----------------------+----------------------------|
 | 한줄실행             | c-x c-e                    |
 |----------------------+----------------------------|
-| 바로 실행            | m-: eval                   |
+| 바로 실행            | m-: eval                  |
 |----------------------+----------------------------|
 | 명령어 찾기          | m-x                        |
 |----------------------+----------------------------|

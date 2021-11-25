@@ -179,8 +179,14 @@ DesktopNames=exwm
 
   add this to =start-exwm.sh= Make sure =xrdb= is installed
   #+begin_src shell :tangle ./exwm/start-exwm.sh :shebang #!/bin/sh
-    
     #xrdb ~/.emacs.d/exwm/Xresources
+    
+    # Run the screen compositor
+    compton &
+    
+    # Enable screen locking on suspend
+    xss-lock -- slock &
+    
     exec dbus-launch --exit-with-session emacs -mm --debug-init -l ~/.emacs.d/desktop.el
     
   #+end_src
@@ -208,4 +214,8 @@ DesktopNames=exwm
   (setq display-time-day-and-date t)
   ;(setq dislpay-time-format "%m/%d/%y")
   (display-time-mode 1)
+#+end_src
+* Lock screen
+#+begin_src shell
+sudo apt install slock xss-lock
 #+end_src
