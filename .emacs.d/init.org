@@ -7,10 +7,9 @@
   sudo apt update
   sudo apt upgrade -y && sudo apt autoremove -y
   sudo apt-get install libutils
-  sudo apt-get install libutil
   sudo apt-get install ubuntu-desktop
   sudo apt-get install indicator-appmenu-tools
-  ./configure --with-native-compilation --with-mailutils --vterm-module
+  ./configure --with-native-compilation --with-mailutils
   sudo apt install libtool-bin #vterm설치용
   sudo apt install compton  #스크롤 부드럽게
   sudo apt install feh #백그라운드 설정
@@ -458,7 +457,7 @@
 #+begin_src emacs-lisp
   (use-package python-mode
     :ensure nil
-    :hook (python-mode . lsp-deferred)
+    :hook (python-mode . lsp-deferred) ;python mode켤때 lsp모드 켬
     :custom
     (python-shell-interpreter "python3")
     (dap-python-excutable "python3")
@@ -466,18 +465,26 @@
     :config
     (require 'dap-python)
   )
-
+  
 #+end_src
+
+#+RESULTS:
+| evil-collection-python-set-evil-shift-width | lsp-deferred | doom-modeline-env-setup-python |
 
 Commands:
 - Interactive Python shell: =M-x run-python= (C-c C-p or g z in evil-mode)
-- python-shell-send-file =C-c C-l=
-- python-shell-send-buffer =C-c C-c=
 - python-shell-send-region =C-c C-r=
-  
+  : 다른 버퍼에 run-python실행하고, 이 버퍼에서 영역 산택후 send-region하면 python interpreter에서 실행됨
+- python-shell-send-buffer =C-c C-c=
+  : 버퍼내용을 통채로 넘겨서 실행함
+- python-shell-send-file =C-c C-l=
+  : 파일내용을 통채로 넘겨서 실행함
 **** python virtual env
-- pyvenv-activate 요걸로 선택할 수 있음
+- pyvenv-activate 요걸로 파일 열기 전에 venv 선택할 수 있음
 - pyvenv-deactivate
+- .dir-locals.el
+  ((nil . ((pyvenv-activate . "~/.venv"))))
+  : eval: (getenv "VIRTUAL_ENV") 하면 설정된 path가 보임
 
 #+begin_src emacs-lisp
   (use-package pyvenv
@@ -536,6 +543,8 @@ Commands:
   =M-x eshell=
 #+begin_src shell
   pip install 'python-lsp-server[all]'
+  pip install 'pytest'
+  pip install 'debugpy'
 #+end_src
 - projectile-test-project "pytest" 라는 명령으로 테스트 하도록
   그 버퍼에서 g r 누르면 다시 테스트함(evil mode인경우)
@@ -591,7 +600,7 @@ npm i -g typescript-language-server; npm i -g typescript
 
 ***  lsp treemacs
 - nerd tree같이 보여줌
-- lsp-treemacs-symbols
+- lsp-treemacs-symbols : symbol들을 nerd tree처럼 보여줌
 - lsp-treemacs-references
 - treemacs
 #+begin_src emacs-lisp
@@ -599,6 +608,15 @@ npm i -g typescript-language-server; npm i -g typescript
   :after lsp)
 #+end_src
 
+*** pytest
+- pytest를 우선 설치
+- M-x =projectile-test-project=
+  : 이거 입력하면 어떤 테스트 커맨드 할지 물어봄(기본값은 projectile-project-test-cmd로 변경가능)
+  : python -m unittest discover
+  : 끝나고 해당버퍼에서 r누르면(evil-mode)일때, 다른 버파일때는 M-x recompile하면 됨.
+- 묻지않고 테스트 하게끔 하는법
+  : add-dir-local-variable -> python-mode -> projectile-project-test-cmd -> "pytest" 이렇게 하면 해당 디렉토리 파이썬 파일 열때 저 명령어 쓸지  물어봄 Envl: (setq compilation-read-command nil) 까지 해주면 test시 묻지않고 실행
+ 
 *** lsp ivy
 - symbol 을 입력해서 검색하는것 ;lsp server가 지원할 경우
   lsp-ivy-workspace-symbol
@@ -619,6 +637,27 @@ npm i -g typescript-language-server; npm i -g typescript
     ;breakpoint걸릴때마다 hydra띄우기
     :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 #+end_src
+
+*** python debugging
+#+begin_src shell
+  pip install debugpy
+#+end_src
+
+#+begin_src emacs-lisp
+  ;요거 python-mode에 추가함
+  ;(dap-python-debugger 'debugpy)
+#+end_src
+- dap-debug : 하면  Run file 이나 pytest등 실행하는데 debug mode기반으로 pytest도 가능 브레이크 포인트 걸고
+- dap-debug-edit-template : 하면 dap-debug시 뜨는 것 편집 가능
+  #+begin_src shell
+(dap-register-debug-template
+  "Python :: Run Pytest (gallery_dl)"
+  (list :type "python"
+	:cwd "/home/hongiee/workspace/gallery_dl"
+	:module "pytest"
+	:request "launch"
+	:name "Python :: Run pytest (gallery_dl)"))
+  #+end_src
 
 *** BASIC
 - dap-debug : 디버그 실행 시작
@@ -660,10 +699,11 @@ npm i -g typescript-language-server; npm i -g typescript
 *** BreakPoint : 언어마다 지원하는게 다름
 - dap-breakpoint-toggle : breakpoint 만들기
 - dap-breakpoint-delete-all : breakpoint 전체 삭제
-- dap-breakpoint-condition : conditional breakpoint
+- dap-breakpoint-condition : conditional breakpoint toggle로 브레이크 포인트 건 후 컨디션 걸기
 - dap-breakpoint-hit-conditions : hit conditions, number of hits before breakpoint stops 그 자리에 몇번 지나갔는지
 - dap-breakpoint-log-message : 해당 breakpoint에서 멈추지 않고 정한 로그 출력 {}사용
-- dap-ui-breakpoints : show breakpoint panel
+- dap-ui-breakpoints-list : show breakpoint panel 브레이크 포인트 건것들 보여주기
+- dap-ui-repl : 어딘가 break point걸고 멈춘다음.>> a 입력시 해당 변수 값 볼 수 있음
 *** Hydra
 - dap-hydra : 단축키로 step등 쉽게하기
 #+begin_src emacs-lisp
@@ -681,16 +721,6 @@ npm i -g typescript-language-server; npm i -g typescript
 *** load vscode debug config
 - dap-debug 실행할때 vscode debug config도 동작함
 
-** debugging
-*** python debugging
-
-#+begin_src shell
-  pip install debugpy
-#+end_src
-
-#+begin_src emacs-lisp
-;(dap-python-debugger 'debugpy)
-#+end_src
 
 * File/Dir Local Valiables
 Run =M-x normal-mode= to active

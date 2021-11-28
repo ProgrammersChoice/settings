@@ -257,7 +257,7 @@
 
 (use-package python-mode
   :ensure nil
-  :hook (python-mode . lsp-deferred)
+  :hook (python-mode . lsp-deferred) ;python mode켤때 lsp모드 켬
   :custom
   (python-shell-interpreter "python3")
   (dap-python-excutable "python3")
@@ -326,6 +326,9 @@
   ;breakpoint걸릴때마다 hydra띄우기
   :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 
+;요거 python-mode에 추가함
+;(dap-python-debugger 'debugpy)
+
 ;(dap-register-debug-template "My App"
 ;  (list :type "python"
 ;        :args "-i"
@@ -345,8 +348,6 @@
 
 ;  breakpoint걸릴때마다 hydra띄우기
 ;  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
-
-;(dap-python-debugger 'debugpy)
 
 ;; -*- mode: emacs-lisp; tab-width: 8; -*-
 

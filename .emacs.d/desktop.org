@@ -19,8 +19,17 @@ sudo apt install emacs git fonts-firacode fonts-cantarell
 - s-& launch without popup(counsel-linux-app)
 - windmove-swap-states-left/right/up/down : 윈도우 위치 이동
 - exwm-floating-toggle-floting =C-c C-t C-f=
+  : 창 크기 조절 eval한 이후에
+  : (exwm-layout-shrink-window 200)
+  : (exwm-layout-shrink-window-horizontally 200)
+  : (frame-pixel-width) ;창 선택후에
+  : (frame-pixel-height) ;창 선택후에
+- exwm-workspace-move-window =C-c Ret= 하면 창 위치 선택 가능
 - exwm-layout-toggle-fullscreen 
 - exwm-layout-set-fullscreen =C-c C-f= 특징은 키들도 안먹음
+- exwm-workspace-switch-to-buffer 하면 모든 윈도우에 있는 버퍼 리트스가 떠서 그걸로 스위치 가능한데 그 윈도우로 감 그래서 현재윈도우로 뜨게하려면 아래 컨픽으를 셋업하면 됨
+  : ;; Automatically move EXWM buffer to curren workspace when selected
+  : (setq exwm-layout-show-all-buffers t)
 ** workspaces
 - s+(0-9) 워크 스페이스 스위치
 - s+w 워크 스페이스 선택 + - 하면 추가도 됨
@@ -44,17 +53,30 @@ arandr : sudo apt install arandr
   (defun efs/set-wallpaper()
     (interactive)
     (start-process-shell-command "feh" nil "feh --bg-scale /usr/share/backgrounds/joshua-coleman-something-yellow.jpg"))
-
+  
   (defun efs/exwm-init-hook ()
     ;; Make workspace 1 be the one where we land at startup
     (exwm-workspace-switch-create 1)
     (efs/run-in-background "nm-applet")
     (efs/run-in-background "pasystray")
     (efs/run-in-background "blueman-applet"))
+  
   ;버퍼 이름을 프로그램 이름으로 하는 함수
   (defun efs/exwm-update-class ()
     (exwm-workspace-rename-buffer exwm-class-name))
   
+  (defun efs/exwm-update-title ()
+    (pcase exwm-class-name
+      ("Firefox" (exwm-workspace-rename-buffer (format "Firefox: %s" exwm-title)))))
+  
+  (defun efs/configure-window-by-class ()
+    (interactive)
+    ;(message ("Window '%s' appeared!" exwm-class))
+    (pcase exwm-class-name
+      ;("Firefox" (exwm-workspace-move-window 2))
+      ;("Sol" (exwm-workspace-move-window 3))
+      ("mpv" (exwm-floating-toggle-floating)
+             (exwm-layout-toggle-mode-line))))
   (use-package exwm
     :config
     ;; Set the default number of workspaces
@@ -63,6 +85,17 @@ arandr : sudo apt install arandr
     ;; When window "class" updates, use it to set the buffer name
     (add-hook 'exwm-update-class-hook #'efs/exwm-update-class)
   
+    ;; When window title updates, use it to set the buffer name
+    (add-hook 'exwm-update-title-hook #'efs/exwm-update-title)
+  
+    ;; Configure windows as they're created
+    (add-hook 'exwm-manage-finish-hook #'efs/configure-window-by-class)
+  
+    ;; Automatically move EXWM buffer to curren workspace when selected
+    (setq exwm-layout-show-all-buffers t)
+  
+    ;; Display all EXWM buffers in every workspace buffer list
+    (setq exwm-workspace-show-all-buffers t)
   
     ;; Rebind CapsLock to Ctrl
     ;(start-process-shell-command "xmodmap" nil "xmodmap ~/.emacs.d/exwm/Xmodmap")
