@@ -77,6 +77,14 @@ arandr : sudo apt install arandr
       ;("Sol" (exwm-workspace-move-window 3))
       ("mpv" (exwm-floating-toggle-floating)
              (exwm-layout-toggle-mode-line))))
+  
+  (defun efs/update-displays ()
+    (efs/run-in-background "autorandr --change --force")
+    (efs/set-wallpaper)
+    (message "Display config: %s"
+             (string-trim (shell-command-to-string "autorandr --current"))))
+  
+  
   (use-package exwm
     :config
     ;; Set the default number of workspaces
@@ -101,7 +109,15 @@ arandr : sudo apt install arandr
     ;(start-process-shell-command "xmodmap" nil "xmodmap ~/.emacs.d/exwm/Xmodmap")
     (require 'exwm-randr)
     (exwm-randr-enable)
-    (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2560x1600 --pos 0x0 --rotate normal")
+    ;(start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2560x1600 --pos 0x0 --rotate normal")
+  
+    ;multi monitor
+    ;(setq exwm-randr-workspace-monitor-plist '(3 "Virtual-2" 4 "virtual-3"))
+  
+    ;; react to display connectivity change, do initial display update
+    (add-hook 'exwm-randr-screen-change-hook #'efs/update-displays)
+    (efs/update-displays)
+  
   
     ;; set wallpaper after changing resolution
     (efs/set-wallpaper)
@@ -114,6 +130,12 @@ arandr : sudo apt install arandr
     ;; Load the system tray before exwm-init
     (require 'exwm-systemtray)
     (exwm-systemtray-enable)
+  
+    ;; 마우스 커서가 윈도우 따라가게
+    (setq exwm-workspace-wrap-cursor t)
+    ;; 마우스 커서따라 포커스 따라가게
+    (setq mouse-autoselect-window t
+          focus-follows-mouse t)
   
     ;; These keys should always pass through to Emacs
     (setq exwm-input-prefix-keys
@@ -252,3 +274,72 @@ DesktopNames=exwm
 #+begin_src shell
 sudo apt install slock xss-lock
 #+end_src
+* Autorandr
+#+begin_src shell
+  sudo apt install autorandr
+  autorandr --save mobile
+  ls ~/.config/autorandr/mobile
+  cat ~/.config/autorandr/mobile/config
+  autorandr --change
+  autorandr --save docked
+  autorandr #docked가 현재 세팅임을 보여줌
+  autorandr --change mobile
+#+end_src
+
+* Tab-mode
+** Basic Usage
+
+- =tab-bar-mode= - Enable display of the tab bar
+- =tab-new= (~C-x t 2~) - Create a new tab
+- =tab-next= (~C-x t o~, evil: ~g t~) - Move to the next tab (also known as =tab-bar-switch-to-next-tab=)
+- =tab-bar-switch-to-prev-tab= (evil: ~g T~) - Switch to the previous tab
+- =tab-rename= (~C-x t r~) - Rename the current tab (or numbered tab with prefix arg)
+- =tab-close= (~C-x t 0~) - Close the current tab
+- =tab-close-other= (~C-x t 1~) - Close other tabs
+- =tab-bar-undo-close-tab= - Reopen the last closed tab
+- =tab-move= (~C-x t m~) - Move the current tab to the right (or left with negative prefix)
+- =tab-bar-select-tab-by-name= (~C-x t RET~) - Select tab by name using completion
+
+** Configuring operation
+
+- =tab-bar-new-tab-choice= - The name of a buffer or file to display in new tabs
+- =tab-bar-new-tab-to= - Where to place new tabs (left or right of current) - Also a function!
+- =tab-bar-tab-name-function= - Control how new tabs are named (can prompt for a name!)
+
+#+begin_src emacs-lisp
+
+  (setq tab-bar-new-tab-choice "*scratch*")
+
+#+end_src
+
+** Configuring tab-bar appearance
+
+- =tab-bar-close-button-show= - Show or hide the close button
+- =tab-bar-new-button-show= - Show or hide the new button at the end
+- =tab-bar-button-relief= - Control pixel width of tab bar button appearance
+
+- =tab-bar= face - customize text of tabs
+- =tab-bar-tab= face - customize the color of the active tab
+- =tab-bar-tab-inactive= face - customize the color of inactive tabs
+
+#+begin_src emacs-lisp
+
+  (setq tab-bar-close-button-show nil
+        tab-bar-new-button-show nil)
+
+#+end_src
+
+** Using tab-bar-mode without showing the bar
+
+#+begin_src emacs-lisp
+
+;; Don't turn on tab-bar-mode when tabs are created
+;(setq tab-bar-show nil)
+
+;; Get the current tab name for use in some other display
+(defun efs/current-tab-name ()
+  (alist-get 'name (tab-bar--current-tab)))
+
+#+end_src
+
+One downside to this is that =doom-modeline= (currently) stops showing the tab name in the mode line when =tab-bar-mode= isn't turned on.

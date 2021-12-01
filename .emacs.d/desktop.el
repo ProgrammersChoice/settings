@@ -30,6 +30,14 @@
     ;("Sol" (exwm-workspace-move-window 3))
     ("mpv" (exwm-floating-toggle-floating)
            (exwm-layout-toggle-mode-line))))
+
+(defun efs/update-displays ()
+  (efs/run-in-background "autorandr --change --force")
+  (efs/set-wallpaper)
+  (message "Display config: %s"
+           (string-trim (shell-command-to-string "autorandr --current"))))
+
+
 (use-package exwm
   :config
   ;; Set the default number of workspaces
@@ -54,7 +62,15 @@
   ;(start-process-shell-command "xmodmap" nil "xmodmap ~/.emacs.d/exwm/Xmodmap")
   (require 'exwm-randr)
   (exwm-randr-enable)
-  (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2560x1600 --pos 0x0 --rotate normal")
+  ;(start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2560x1600 --pos 0x0 --rotate normal")
+
+  ;multi monitor
+  ;(setq exwm-randr-workspace-monitor-plist '(3 "Virtual-2" 4 "virtual-3"))
+
+  ;; react to display connectivity change, do initial display update
+  (add-hook 'exwm-randr-screen-change-hook #'efs/update-displays)
+  (efs/update-displays)
+
 
   ;; set wallpaper after changing resolution
   (efs/set-wallpaper)
@@ -67,6 +83,12 @@
   ;; Load the system tray before exwm-init
   (require 'exwm-systemtray)
   (exwm-systemtray-enable)
+
+  ;; 마우스 커서가 윈도우 따라가게
+  (setq exwm-workspace-wrap-cursor t)
+  ;; 마우스 커서따라 포커스 따라가게
+  (setq mouse-autoselect-window t
+        focus-follows-mouse t)
 
   ;; These keys should always pass through to Emacs
   (setq exwm-input-prefix-keys
@@ -129,3 +151,15 @@
 (setq display-time-day-and-date t)
 ;(setq dislpay-time-format "%m/%d/%y")
 (display-time-mode 1)
+
+(setq tab-bar-new-tab-choice "*scratch*")
+
+(setq tab-bar-close-button-show nil
+      tab-bar-new-button-show nil)
+
+;; Don't turn on tab-bar-mode when tabs are created
+;(setq tab-bar-show nil)
+
+;; Get the current tab name for use in some other display
+(defun efs/current-tab-name ()
+  (alist-get 'name (tab-bar--current-tab)))

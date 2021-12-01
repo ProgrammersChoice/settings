@@ -292,6 +292,9 @@
   ;:after flymake
   :config
   (add-hook 'flymake-mode-hook #'flymake-diagnostic-at-point-mode))
+;(use-package flycheck
+;  :ensure t
+;  :init (global-flycheck-mode))
 
 (use-package company
   :after lsp-mode
@@ -546,3 +549,24 @@
   :hook (eshell-first-time-mode . efs/configure-eshell)
   :config
   (eshell-git-prompt-use-theme 'powerline))
+
+(setq split-height-threshold nil)
+(setq split-width-threshold 0)
+
+(use-package buffer-move)
+
+(use-package winner-mode
+  :ensure nil
+  :bind (:map evil-window-map
+         ("u" . winner-undo)
+         ("U" . winner-redo))
+  :config
+  (winner-mode))
+
+(use-package ace-window)
+
+(setq aw-keys '(?a ?s ?d ?f ?g ?h ?j ?k ?l))
+
+(use-package winum
+  :config
+  (winum-mode))
