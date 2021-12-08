@@ -10,9 +10,13 @@
 (defun efs/exwm-init-hook ()
   ;; Make workspace 1 be the one where we land at startup
   (exwm-workspace-switch-create 1)
-  (efs/run-in-background "nm-applet")
-  (efs/run-in-background "pasystray")
-  (efs/run-in-background "blueman-applet"))
+
+  ;; enable polybar
+  ;;(efs/start-panel)
+
+  (efs/run-in-background "nm-applet") ;시스템 트레이에 네트워크 아이콘 보이게
+  (efs/run-in-background "pasystray") ;시스템 트레이에서 볼륨조절
+  (efs/run-in-background "blueman-applet")) ;시스템 트레이에 블루투스 아이콘 보이게
 
 ;버퍼 이름을 프로그램 이름으로 하는 함수
 (defun efs/exwm-update-class ()
@@ -80,9 +84,9 @@
   (exwm-randr-enable)
   ;; (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2048x1152 --pos 0x0 --rotate normal")
 
-  ;; Load the system tray before exwm-init
-  (require 'exwm-systemtray)
-  (exwm-systemtray-enable)
+  ;; Load the system tray before exwm-init <-> polybar
+  ;; (require 'exwm-systemtray)
+  ;; (exwm-systemtray-enable)
 
   ;; 마우스 커서가 윈도우 따라가게
   (setq exwm-workspace-wrap-cursor t)
@@ -100,7 +104,8 @@
       ?\M-&
       ?\M-:
       ?\C-\M-j  ;; Buffer list
-      ?\C-\ ))  ;; Ctrl+Space
+      ?\C-\   ;; Ctrl+Space
+      )) ;; Ctrl + \\
 
   ;; Ctrl+Q will enable the next key to be sent directly
   (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
@@ -114,7 +119,7 @@
 
           ;; Move between windows
           ([s-left] . windmove-left)
-          ([s-right] . windmove-right)
+          ([s-right] . windmove-right) ;C-h v desktop-environment-mode-map desktop-environment-lock-screen to cancel the C-l
           ([s-up] . windmove-up)
           ([s-down] . windmove-down)
 
@@ -136,6 +141,10 @@
                     (number-sequence 0 9))))
 
   (exwm-enable))
+
+(push ?\C-\\ exwm-input-prefix-keys)
+(require 'exwm-xim)
+(exwm-xim-enable)
 
 (use-package desktop-environment
   :after exwm
@@ -163,3 +172,51 @@
 ;; Get the current tab name for use in some other display
 (defun efs/current-tab-name ()
   (alist-get 'name (tab-bar--current-tab)))
+
+;  (use-package edwina
+;    :ensure t
+;    :config
+;    (setq display-buffer-base-action '(display-buffer-below-selected))
+;    ;; (edwina-setup-dwm-keys)
+;    (edwina-mode 1))
+
+;; Make sure the server is started (better to do this in your main Emacs config!)
+(server-start)
+
+(defvar efs/polybar-process nil
+  "Holds the process of the running Polybar instance, if any")
+
+(defun efs/kill-panel ()
+  (interactive)
+  (when efs/polybar-process
+    (ignore-errors
+      (kill-process efs/polybar-process)))
+  (setq efs/polybar-process nil))
+
+(defun efs/start-panel ()
+  (interactive)
+  (efs/kill-panel)
+  (setq efs/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
+
+(defun efs/send-polybar-hook (module-name hook-index)
+  (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
+
+(defun efs/send-polybar-exwm-workspace ()
+  (efs/send-polybar-hook "exwm-workspace" 1))
+
+;; Update panel indicator when workspace changes
+(add-hook 'exwm-workspace-switch-hook #'efs/send-polybar-exwm-workspace)
+
+;; Start the Polybar panel
+(efs/start-panel)
+
+;; Make sure the server is started (better to do this in your main Emacs config!)
+;; (server-start)
+
+(defun efs/polybar-exwm-workspace ()
+  (pcase exwm-workspace-current-index
+    (0 "")
+    (1 "")
+    (2 "")
+    (3 "")
+    (4 "")))

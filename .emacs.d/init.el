@@ -45,15 +45,43 @@
 ;; on non-guix systems, "ensure" packages by default
 (setq use-package-always-ensure t)
 
+;.emacs.d에다가 tmp만들어서 거기 다 백업
+;(setq backup-directory-alist '(("." . ,(expand-file-name "tmp/backups/" user-emacs-directory))))
+;모든 백업을 끌때
+(setq make-backup-files nil)
+
+;https://github.com/emacscollective/no-littering
+;패키지들이 잡다하게 만드는 파일들의 위치를 정리해줌
+(use-package no-littering)
+
+; 폴더 없으면 생기게 하고
+(make-directory (expand-file-name "tmp/auto-saves/" user-emacs-directory) t)
+
+(setq auto-save-list-file-prefix (expand-file-name "tmp/auto-saves/sessions/" user-emacs-directory)
+      auto-save-file-name-transforms `((".*" ,(expand-file-name "tmp/auto-saves/" user-emacs-directory) t)))
+
+;(setq create-lockfiles nil)
+
 (custom-set-variables
  '(package-selected-packages
    '(evil-magit magit ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
 (custom-set-faces
  )
 
-(set-face-attribute 'default nil :family "d2coding" :height 180)
-(setq default-input-method "korean-hangul")
-(set-fontset-font t 'hangul (font-spec :name "d2coding"))
+(defun efs/set-font-faces ()
+  (message "Setting faces!")
+  (set-face-attribute 'default nil :family "d2coding" :height 180)
+  (setq default-input-method "korean-hangul")
+  (set-fontset-font t 'hangul (font-spec :name "d2coding"))
+  (global-set-key (kbd "S-SPC") 'toggle-input-method))
+
+(if (daemonp)
+    (add-hook 'after-make-frame-functions
+              (lambda (frame)
+                (setq doom-modeline-icon t)
+                (with-selected-frame frame
+                  (efs/set-font-faces))))
+    (efs/set-font-faces))
 
 (column-number-mode) 
 (global-display-line-numbers-mode t) ;t 는 시작시 묻지말고 셋하라는 의미
@@ -187,7 +215,7 @@
 
 ;;easymotion C-'를 트리거로 설정
 (use-package avy)
-(global-set-key (kbd "C-'") 'avy-goto-char-2)
+(global-set-key (kbd "C-;") 'avy-goto-char-2)
 
 ;;evil-multiedit 힐스너 버전
    ;(use-package evil-multiedit)
@@ -570,3 +598,9 @@
 (use-package winum
   :config
   (winum-mode))
+
+;; Enable server mode (daemon) for this Emacs session
+;(server-start)
+
+;emacs --daemon=worker
+;emacsclient -f worker -u -e "(org-babel-tangle-file \"~/.emacs.d/Emacs.org\")"

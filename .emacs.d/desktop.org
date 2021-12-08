@@ -18,6 +18,7 @@ sudo apt install emacs git fonts-firacode fonts-cantarell
 - M-& launch a process asynchronously
 - s-& launch without popup(counsel-linux-app)
 - windmove-swap-states-left/right/up/down : 윈도우 위치 이동
+- buf-move 하고 방향키면 다됨
 - exwm-floating-toggle-floting =C-c C-t C-f=
   : 창 크기 조절 eval한 이후에
   : (exwm-layout-shrink-window 200)
@@ -57,9 +58,13 @@ arandr : sudo apt install arandr
   (defun efs/exwm-init-hook ()
     ;; Make workspace 1 be the one where we land at startup
     (exwm-workspace-switch-create 1)
-    (efs/run-in-background "nm-applet")
-    (efs/run-in-background "pasystray")
-    (efs/run-in-background "blueman-applet"))
+  
+    ;; enable polybar
+    ;;(efs/start-panel)
+  
+    (efs/run-in-background "nm-applet") ;시스템 트레이에 네트워크 아이콘 보이게
+    (efs/run-in-background "pasystray") ;시스템 트레이에서 볼륨조절
+    (efs/run-in-background "blueman-applet")) ;시스템 트레이에 블루투스 아이콘 보이게
   
   ;버퍼 이름을 프로그램 이름으로 하는 함수
   (defun efs/exwm-update-class ()
@@ -127,9 +132,9 @@ arandr : sudo apt install arandr
     (exwm-randr-enable)
     ;; (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2048x1152 --pos 0x0 --rotate normal")
   
-    ;; Load the system tray before exwm-init
-    (require 'exwm-systemtray)
-    (exwm-systemtray-enable)
+    ;; Load the system tray before exwm-init <-> polybar
+    ;; (require 'exwm-systemtray)
+    ;; (exwm-systemtray-enable)
   
     ;; 마우스 커서가 윈도우 따라가게
     (setq exwm-workspace-wrap-cursor t)
@@ -147,7 +152,8 @@ arandr : sudo apt install arandr
         ?\M-&
         ?\M-:
         ?\C-\M-j  ;; Buffer list
-        ?\C-\ ))  ;; Ctrl+Space
+        ?\C-\   ;; Ctrl+Space
+        )) ;; Ctrl + \\
   
     ;; Ctrl+Q will enable the next key to be sent directly
     (define-key exwm-mode-map [?\C-q] 'exwm-input-send-next-key)
@@ -161,7 +167,7 @@ arandr : sudo apt install arandr
   
             ;; Move between windows
             ([s-left] . windmove-left)
-            ([s-right] . windmove-right)
+            ([s-right] . windmove-right) ;C-h v desktop-environment-mode-map desktop-environment-lock-screen to cancel the C-l
             ([s-up] . windmove-up)
             ([s-down] . windmove-down)
   
@@ -183,6 +189,10 @@ arandr : sudo apt install arandr
                       (number-sequence 0 9))))
   
     (exwm-enable))
+  
+  (push ?\C-\\ exwm-input-prefix-keys)
+  (require 'exwm-xim)
+  (exwm-xim-enable)
   
   
 #+end_src
@@ -343,3 +353,400 @@ sudo apt install slock xss-lock
 #+end_src
 
 One downside to this is that =doom-modeline= (currently) stops showing the tab name in the mode line when =tab-bar-mode= isn't turned on.
+
+* edwina
+https://github.com/ajgrf/edwina
+
+** What is it?
+
+- Edwina is a dynamic tiling window manager for Emacs
+- Provides master/stack window layout like dwm or Xmonad
+- Experimental!
+
+Thanks to *X VNA* for suggesting this package!
+
+** Setting it up
+
+#+begin_src emacs-lisp
+
+;  (use-package edwina
+;    :ensure t
+;    :config
+;    (setq display-buffer-base-action '(display-buffer-below-selected))
+;    ;; (edwina-setup-dwm-keys)
+;    (edwina-mode 1))
+
+#+end_src
+
+** Keybindings
+
+By default these keys are prefixed with =C-c C-w=. Customize =edwina-keymap-prefix= to change the prefix.
+
+|-------------+--------------------------------------|
+| Binding     | Action                               |
+|-------------+--------------------------------------|
+| =r=, =C-r=      | Arrange windows                      |
+| =n=, =C-n=, =SPC= | Move to next window                  |
+| =p=, =C-p=      | Move to previous window              |
+| =N=, =C-S-n=    | Swap places with the next window     |
+| =P=, =C-S-p=    | Swap places with the previous window |
+| =%=, ={=, =[=     | Decrease the size of the master area |
+| =^=, =}=, =]=     | Increase the size of the master area |
+| =d=, =C-d=      | Decrease number of windows in master |
+| =i=           | Increase number of windows in master |
+| =k=, =C-k=      | Delete window                        |
+| =RET=         | Cycle window to/from master area     |
+| =c=, =C-c=      | Clone current window                 |
+|-------------+--------------------------------------|
+
+*TIP:* Set up =dwm=-inspired keys with =(edwina-setup-dwm-keys)=
+
+* Polybar
+ #+title: The Perfect Panel: Integrating Polybar with Emacs
+
+** You need a panel!
+
+Polybar (https://polybar.github.io/) is:
+
+- Minimal
+- Configurable
+- Provides a reliable system tray
+- Easy to integrate with Emacs!
+
+** Installing Polybar
+
+First install Polybar using your distro's package manager.  Strangely it's not in Ubuntu 20.04!
+
+Here's [[https://github.com/polybar/polybar/wiki/Compiling][how to compile it]] if your distro doesn't have it (which is rare):
+
+#+begin_src sh
+
+  # Install dependencies on Ubuntu 20.04
+  sudo apt update
+  sudo apt install -y build-essential git cmake cmake-data pkg-config \
+        python3-sphinx libcairo2-dev libxcb1-dev libxcb-util0-dev \
+        libxcb-randr0-dev libxcb-composite0-dev python3-xcbgen xcb-proto \
+        libxcb-image0-dev libxcb-ewmh-dev libxcb-icccm4-dev clang
+
+  # Clone the repo and compile version
+  git clone --recursive https://github.com/polybar/polybar
+  cd polybar
+  git checkout 3.5.2
+  ./build.sh
+
+#+end_src
+
+*NOTE:* The =build.sh= script will ask you about features to enable in the Polybar build.  It is *necessary* to say answer =Y= to the =polybar-msg= feature!  You should also answer =Y= to the question about running =sudo make install=.
+
+Also install some icon fonts:
+
+#+begin_src sh
+  
+  sudo apt install fonts-font-awesome fonts-material-design-icons-iconfont
+  https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/JetBrainsMono.zip
+#+end_src
+
+** Basic Polybar config
+
+Tangle this to =.config/polybar/config=
+
+#+begin_src conf :tangle ~/.config/polybar/config :mkdirp yes
+  
+  ; Docs: https://github.com/polybar/polybar
+  ;==========================================================
+  
+  [settings]
+  screenchange-reload = true
+  
+  [global/wm]
+  margin-top = 0
+  margin-bottom = 0
+  
+  [colors]
+  background = #282828
+  foreground = #ebdbb2
+  red        = #fb4934
+  green      = #b8bb26
+  yellow     = #fabd2f
+  blue       = #83a598
+  purple     = #d3869b  
+  teal       = #8ec97c
+  orange     = $fe8019
+  gray       = #a89984
+
+  [bar/panel]
+  width = 100%
+  height = 30
+  offset-x = 0
+  offset-y = 0
+  fixed-center = true
+  enable-ipc = true
+  
+  background = ${colors.background}
+  foreground = ${colors.foreground}
+  
+  line-size = 2
+  line-color = ${colors.foreground}
+  
+  border-size = 0
+  border-color = ${colors.background}
+  
+  padding-top = 5
+  padding-left = 1
+  padding-right = 1
+  
+  module-margin = 1
+  
+  ;font-0 = "Cantarell:size=18:weight=bold;2"
+  ;font-1 = "Font Awesome:size=14;2"
+  ;font-2 = "Material Icons:size=20;5"
+  ;font-3 = "Fira Mono:size=13;-3"
+  font-0 = "JetBrains Mon::size=18:weight=regular;2"
+  font-1 = "Font Awesome:size=14;2"
+  font-2 = "Material Icons:size=20;5"
+  font-3 = "Fira Mono:size=13;-3"
+  
+  modules-left = exwm-workspace
+  modules-right = cpu temperature battery date
+  
+  tray-position = right
+  tray-padding = 2
+  tray-maxsize = 28
+  
+  cursor-click = pointer
+  cursor-scroll = ns-resize
+  
+  [module/exwm-workspace]
+  type = custom/ipc
+  hook-0 = emacsclient -e "exwm-workspace-current-index" | sed -e 's/^"//' -e 's/"$//'
+  initial = 1
+  format-underline = ${colors.foreground}
+  format-padding = 1
+  
+  [module/cpu]
+  type = internal/cpu
+  interval = 2
+  format = <label> <ramp-coreload>
+  format-underline = ${colors.foreground}
+  click-left = emacsclient -e "(proced)"
+  label = %percentage:2%%
+  ramp-coreload-spacing = 0
+  ramp-coreload-0 = ▁
+  ramp-coreload-0-foreground = ${colors.foreground}
+  ramp-coreload-1 = ▂
+  ramp-coreload-2 = ▃
+  ramp-coreload-3 = ▄
+  ramp-coreload-4 = ▅
+  ramp-coreload-5 = ▆
+  ramp-coreload-6 = ▇
+  
+  [module/date]
+  type = internal/date
+  interval = 5
+  
+  date = "%a %b %e"
+  date-alt = "%A %B %d %Y"
+  
+  time = %l:%M %p
+  time-alt = %H:%M:%S
+  
+  format-prefix-foreground = ${colors.foreground}
+  format-underline = ${colors.foreground}
+  
+  label = %date% %time%
+  
+  [module/battery]
+  type = internal/battery
+  battery = BAT0
+  adapter = ADP1
+  full-at = 98
+  time-format = %-l:%M
+  
+  label-charging = %percentage%% / %time%
+  format-charging = <animation-charging> <label-charging>
+  format-charging-underline = ${colors.foreground}
+  
+  label-discharging = %percentage%% / %time%
+  format-discharging = <ramp-capacity> <label-discharging>
+  format-discharging-underline = ${self.format-charging-underline}
+  
+  format-full = <ramp-capacity> <label-full>
+  format-full-underline = ${self.format-charging-underline}
+  
+  ramp-capacity-0 = 
+  ramp-capacity-1 = 
+  ramp-capacity-2 = 
+  ramp-capacity-3 = 
+  ramp-capacity-4 = 
+  
+  animation-charging-0 = 
+  animation-charging-1 = 
+  animation-charging-2 = 
+  animation-charging-3 = 
+  animation-charging-4 = 
+  animation-charging-framerate = 750
+  
+  [module/temperature]
+  type = internal/temperature
+  thermal-zone = 0
+  warn-temperature = 60
+  
+  format = <label>
+  format-underline = ${colors.foreground}
+  format-warn = <label-warn>
+  format-warn-underline = ${self.format-underline}
+  
+  label = %temperature-c%
+  label-warn = %temperature-c%!
+  label-warn-foreground = ${colors.foreground}
+  
+#+end_src
+
+Launch it with this command:
+
+#+begin_src sh
+
+polybar panel
+
+#+end_src
+
+** Starting Polybar from Emacs
+
+#+begin_src emacs-lisp
+  
+  ;; Make sure the server is started (better to do this in your main Emacs config!)
+  (server-start)
+
+  (defvar efs/polybar-process nil
+    "Holds the process of the running Polybar instance, if any")
+  
+  (defun efs/kill-panel ()
+    (interactive)
+    (when efs/polybar-process
+      (ignore-errors
+        (kill-process efs/polybar-process)))
+    (setq efs/polybar-process nil))
+  
+  (defun efs/start-panel ()
+    (interactive)
+    (efs/kill-panel)
+    (setq efs/polybar-process (start-process-shell-command "polybar" nil "polybar panel")))
+  
+  (defun efs/send-polybar-hook (module-name hook-index)
+    (start-process-shell-command "polybar-msg" nil (format "polybar-msg hook %s %s" module-name hook-index)))
+
+  (defun efs/send-polybar-exwm-workspace ()
+    (efs/send-polybar-hook "exwm-workspace" 1))
+
+  ;; Update panel indicator when workspace changes
+  (add-hook 'exwm-workspace-switch-hook #'efs/send-polybar-exwm-workspace)
+#+end_src
+
+Now we can start Polybar when EXWM starts up, inside of =efs/exwm-init-hook=:
+
+#+begin_src emacs-lisp
+
+    ;; Start the Polybar panel
+    (efs/start-panel)
+
+#+end_src
+
+*NOTE:* Disable =exwm-systemtray= before restarting Emacs so that the tray works!
+
+** Requesting information from Emacs
+
+Use the power of =emacsclient=!  We'll cover this more in a video next week.
+
+#+begin_src emacs-lisp
+
+  ;; Make sure the server is started (better to do this in your main Emacs config!)
+  ;; (server-start)
+
+#+end_src
+
+Use it to get the EXWM workspace number:
+
+#+begin_src sh
+
+emacsclient -e "exwm-workspace-current-index"
+
+#+end_src
+
+Define a function to call the workspaces whatever you want!
+
+#+begin_src emacs-lisp
+
+(defun efs/polybar-exwm-workspace ()
+  (pcase exwm-workspace-current-index
+    (0 "")
+    (1 "")
+    (2 "")
+    (3 "")
+    (4 "")))
+
+#+end_src
+
+Try it out:
+
+#+begin_src sh
+
+emacsclient -e "exwm-workspace-current-index"
+
+#+end_src
+
+*** Important caveat!
+
+One thing to keep in mind is that this works well for global variables, but not so great for frame parameters!  The timing has to be perfect to get the value of a frame parameter for the workspace frame you land on.  It's possible, but requires more code.
+
+** Adding a workspace indicator to the panel
+
+#+begin_src conf
+
+  modules-left = exwm-workspace
+
+  [module/exwm-workspace]
+  type = custom/ipc
+  hook-0 = emacsclient -e "(efs/polybar-exwm-workspace)" | sed -e 's/^"//' -e 's/"$//'
+  initial = 1
+  format-underline = ${colors.foreground}
+  format-padding = 1
+
+#+end_src
+
+*NOTE:* The extra =sed= part is necessary!  If you don't have this command available, you can install it from your distro's package repository.
+
+** Sending information from Emacs using hooks
+
+Use the =polybar-msg= command to invoke a "hook index" to have the module update itself:
+
+#+begin_src sh
+
+polybar-msg hook exwm 1
+
+#+end_src
+
+Learn more about the IPC module on the Polybar Wiki: https://github.com/polybar/polybar/wiki/Module:-ipc
+
+
+** Check out the Polybar wiki
+
+Learn how to configure everything else in Polybar:
+
+https://github.com/polybar/polybar/wiki
+
+Some useful bits from my own configuration:
+
+*** Spotify now playing (requires the =playerctl= app)
+
+- [[https://github.com/daviwil/dotfiles/blame/fa30ecb85b5c6fa4c9ee63e460f2e375756a5c10/Desktop.org#L588-L591][Polybar config]]
+- [[https://github.com/daviwil/dotfiles/blob/fa30ecb85b5c6fa4c9ee63e460f2e375756a5c10/.config/polybar/player-status.sh][player-status.sh]]
+
+*** Mail indicator for mu4e
+
+- [[https://github.com/daviwil/dotfiles/blame/fa30ecb85b5c6fa4c9ee63e460f2e375756a5c10/Desktop.org#L383-L388][Emacs config]]
+- [[https://github.com/daviwil/dotfiles/blame/fa30ecb85b5c6fa4c9ee63e460f2e375756a5c10/Desktop.org#L593-L598][Polybar config]]
+
+*** Chat indicators for tracking.el
+
+- [[https://github.com/daviwil/dotfiles/blame/fa30ecb85b5c6fa4c9ee63e460f2e375756a5c10/Desktop.org#L390-L405][Emacs config]]
+- [[https://github.com/daviwil/dotfiles/blame/fa30ecb85b5c6fa4c9ee63e460f2e375756a5c10/Desktop.org#L600-L604][Polybar config]]
