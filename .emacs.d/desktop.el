@@ -5,7 +5,7 @@
   ;; --bg-scale은 전체를 체우겠다는 의미
 (defun efs/set-wallpaper()
   (interactive)
-  (start-process-shell-command "feh" nil "feh --bg-scale /usr/share/backgrounds/joshua-coleman-something-yellow.jpg"))
+  (start-process-shell-command "feh" nil "feh --bg-scale ~/.emacs.d/newyork8k2.jpg"))
 
 (defun efs/exwm-init-hook ()
   ;; Make workspace 1 be the one where we land at startup
