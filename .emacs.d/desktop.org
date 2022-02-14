@@ -8,7 +8,7 @@
 #+begin_src sh
 sudo apt install emacs git fonts-firacode fonts-cantarell
 #+end_src
-
+ 
 - =~/.emacs.d/exwm/EXWM.desktop=
 - =~/.emacs.d/exwm/exwm.sh=
 - sudo ln -f ~/.emacs.d/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
@@ -19,7 +19,8 @@ sudo apt install emacs git fonts-firacode fonts-cantarell
 - s-& launch without popup(counsel-linux-app)
 - windmove-swap-states-left/right/up/down : 윈도우 위치 이동
 - buf-move 하고 방향키면 다됨
-- exwm-floating-toggle-floting =C-c C-t C-f=
+- exwm-floating-toggle-floting 화면 움직이게 =C-c C-t C-f=
+- 모드라인 지우기 C-c C-t ret
   : 창 크기 조절 eval한 이후에
   : (exwm-layout-shrink-window 200)
   : (exwm-layout-shrink-window-horizontally 200)
@@ -117,24 +118,16 @@ arandr : sudo apt install arandr
     ;(start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2560x1600 --pos 0x0 --rotate normal")
   
     ;multi monitor
-    ;(setq exwm-randr-workspace-monitor-plist '(3 "Virtual-2" 4 "virtual-3"))
+    ;; Use only one monitor
+    ;(start-process-shell-command "xrandr" nil "xrandr --output VGA-0 --off output DVI-D-0 --off --output HDMI-0 --mode 2560x1440 --pos 0x0 --rotate right --output VGA-1-1 --off --output HDMI-1-1 --off --output DP-1-1 --off")
+  
+    ;; Use two monitor
+    (start-process-shell-command "xrandr" nil "xrandr --output VGA-0 --off --output DVI-D-0 --mode 2560x1440 --pos 2160x755 --rotate normal --output HDMI-0 --primary --mode 2560x1440 --pos 0x0 --rotate right --output VGA-1-1 --off --output HDMI-1-1 --off --output DP-1-1 --off")
+    (setq exwm-randr-workspace-monitor-plist '(0 "HDMI-0" 1 "HDMI-0" 2 "HDMI-0" 3 "DVI-D-0" 4 "DVI-D-0" 5 "DVI-D-0" 6 "DVI-D-0" 7 "DVI-D-0" 8 "DVI-D-0" 9 "DVI-D-0"))
   
     ;; react to display connectivity change, do initial display update
     (add-hook 'exwm-randr-screen-change-hook #'efs/update-displays)
     (efs/update-displays)
-  
-  
-    ;; set wallpaper after changing resolution
-    (efs/set-wallpaper)
-  
-    ;; Set the screen resolution (update this to be the correct resolution for your screen!)
-    (require 'exwm-randr)
-    (exwm-randr-enable)
-    ;; (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2048x1152 --pos 0x0 --rotate normal")
-  
-    ;; Load the system tray before exwm-init <-> polybar
-    ;; (require 'exwm-systemtray)
-    ;; (exwm-systemtray-enable)
   
     ;; 마우스 커서가 윈도우 따라가게
     (setq exwm-workspace-wrap-cursor t)
@@ -188,7 +181,9 @@ arandr : sudo apt install arandr
                             (exwm-workspace-switch-create ,i))))
                       (number-sequence 0 9))))
   
-    (exwm-enable))
+    (if (eq system-type 'gnu/linux)
+      (exwm-enable))
+    )
   
   (push ?\C-\\ exwm-input-prefix-keys)
   (require 'exwm-xim)
@@ -219,7 +214,7 @@ sudo apt install scrot brightnessctl playerctl
   (desktop-environment-brightness-normal-decrement "5%-"))
 #+end_src
 ** 로그인시 exwm 보이게
-#+begin_src sh :tnagle no
+#+begin_src sh :tangle no
 sudo ln -f ~/.emacs.d/exwm/EXWM.desktop /usr/share/xsessions/EXWM.desktop
 #+end_src
 
@@ -501,8 +496,8 @@ Tangle this to =.config/polybar/config=
   ;font-1 = "Font Awesome:size=14;2"
   ;font-2 = "Material Icons:size=20;5"
   ;font-3 = "Fira Mono:size=13;-3"
-  font-0 = "JetBrains Mon::size=18:weight=regular;2"
-  font-1 = "Font Awesome:size=14;2"
+  font-0 = "JetBrains Mon::size=13:weight=regular;2"
+  font-1 = "Font Awesome:size=13;2"
   font-2 = "Material Icons:size=20;5"
   font-3 = "Fira Mono:size=13;-3"
   
@@ -645,10 +640,12 @@ polybar panel
 Now we can start Polybar when EXWM starts up, inside of =efs/exwm-init-hook=:
 
 #+begin_src emacs-lisp
-
-    ;; Start the Polybar panel
+  
+  ;; Start the Polybar panel
+  (if (eq system-type 'gnu/linux)
     (efs/start-panel)
-
+  )
+  
 #+end_src
 
 *NOTE:* Disable =exwm-systemtray= before restarting Emacs so that the tray works!

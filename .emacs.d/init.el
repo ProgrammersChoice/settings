@@ -70,7 +70,7 @@
 
 (defun efs/set-font-faces ()
   (message "Setting faces!")
-  (set-face-attribute 'default nil :family "d2coding" :height 180)
+  (set-face-attribute 'default nil :family "d2coding" :height 135)
   (setq default-input-method "korean-hangul")
   (set-fontset-font t 'hangul (font-spec :name "d2coding"))
   (global-set-key (kbd "S-SPC") 'toggle-input-method))
@@ -212,26 +212,38 @@
   :config
   (evil-collection-define-key 'normal 'dired-mode-map
     "H" 'dired-hide-dotfiles-mode))
+(defun mu-open-in-external-app ()
+  "Open the file where point is or the marked files in Dired in external
+  app. The app is chosen from your OS's preference."
+  (interactive)
+  (let* ((file-list
+	  (dired-get-marked-files)))
+   (mapc
+    (lambda (file-path)
+     (let ((process-connection-type nil))
+      (start-process "" nil "xdg-open" file-path))) file-list)))
+(define-key dired-mode-map (kbd "C-<return>") #'mu-open-in-external-app)
 
 ;;easymotion C-'를 트리거로 설정
 (use-package avy)
-(global-set-key (kbd "C-;") 'avy-goto-char-2)
+(evil-define-key '(normal visual) 'global
+ "," #'avy-goto-char-2)
 
 ;;evil-multiedit 힐스너 버전
-   ;(use-package evil-multiedit)
-   ;(evil-multiedit-default-keybinds)
-;   (use-package evil-mc)
-;   (global-evil-mc-mode 1)
- ;; evil-mc
-; (evil-define-key '(normal visual) 'global
-;   "gzm" #'evil-mc-make-all-cursors
-;   "gzu" #'evil-mc-undo-all-cursors
-;   "gzz" #'+evil/mc-toggle-cursors
-;   "gzc" #'+evil/mc-make-cursor-here
-;   "gzn" #'evil-mc-make-and-goto-next-cursor
-;   "gzp" #'evil-mc-make-and-goto-prev-cursor
-;   "gzN" #'evil-mc-make-and-goto-last-cursor
-;   "gzP" #'evil-mc-make-and-goto-first-cursor)
+;(use-package evil-multiedit)
+;(evil-multiedit-default-keybinds)
+;(use-package evil-mc)
+;(global-evil-mc-mode 1)
+;; evil-mc
+;(evil-define-key '(normal visual) 'global
+;  "gzm" #'evil-mc-make-all-cursors
+;  "gzu" #'evil-mc-undo-all-cursors
+;  "gzz" #'+evil/mc-toggle-cursors
+;  "gzc" #'+evil/mc-make-cursor-here
+;  "gzn" #'evil-mc-make-and-goto-next-cursor
+;  "gzp" #'evil-mc-make-and-goto-prev-cursor
+;  "gzN" #'evil-mc-make-and-goto-last-cursor
+;  "gzP" #'evil-mc-make-and-goto-first-cursor)
 ; (with-eval-after-load 'evil-mc
 ;   (evil-define-key '(normal visual) evil-mc-key-map
 ;     (kbd "C-n") #'evil-mc-make-and-goto-next-cursor
@@ -380,6 +392,9 @@
 ;  breakpoint걸릴때마다 hydra띄우기
 ;  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 
+(use-package magit
+  :ensure t)
+
 ;; -*- mode: emacs-lisp; tab-width: 8; -*-
 
 ;; Local Variables:
@@ -415,11 +430,42 @@
 
     (if (eq system-type 'darwin)
         (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-          '("~/workspace/org/tasks.org"
-            "~/workspace/org/test.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
+          '("~/.emacs.d/README.org"
+            "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
+    (setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
 
 ;(advice-add 'org-refile :after 'org-save-all-org-buffers)
 ;이렇게 하면 org-refile실행시 바로 org-save-all-org-buffers가 실행이됨
+
+;스크린 캡처
+(add-hook 'org-mode-hook
+  (lambda ()
+    (defun cam ()
+      (interactive)
+      (if buffer-file-name
+        (progn
+	  (message "Waiting for region selection with mouse ...")
+	  (make-directory "./images/" t)
+	  (let ((filename
+	         (concat "./images/"
+	                 (file-name-nondirectory buffer-file-name)
+	               "_"
+	               (format-time-string "%Y%m%d_%H%M%S")
+	               ".png")))
+	    (if (executable-find "scrot")
+	        (call-process "scrot" nil nil nil "-s" filename)
+	        (call-process "screencapture" nil nil nil "-s" filename))
+	    (insert (concat "[[" filename "]]"))
+	    (org-display-inline-images t t)
+	  )
+	  (message "File created and linked ...")
+        )
+        (message "You're in a not saved buffer! Save it first!")
+      )
+    )
+  )
+)
+(add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
 
 ;head마다 다른 사이즈
 (require 'org-faces)
@@ -554,10 +600,17 @@
 
 ;(+ 55 100)
 
+(if (eq system-type 'darwin)
 (use-package vterm
   :commands vterm
   :config
-  (setq vterm-max-scrollback 10000))
+  (setq vterm-max-scrollback 10000)))
+(if (eq system-type 'gnu/linux)
+(use-package vterm
+  :commands vterm
+  :load-path "~/.emacs.d/emacs-libvterm"
+  :config
+  (setq vterm-max-scrollback 10000)))
 
 (defun efs/configure-eshell()
   ;;save command history

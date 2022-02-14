@@ -69,24 +69,16 @@
   ;(start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2560x1600 --pos 0x0 --rotate normal")
 
   ;multi monitor
-  ;(setq exwm-randr-workspace-monitor-plist '(3 "Virtual-2" 4 "virtual-3"))
+  ;; Use only one monitor
+  ;(start-process-shell-command "xrandr" nil "xrandr --output VGA-0 --off output DVI-D-0 --off --output HDMI-0 --mode 2560x1440 --pos 0x0 --rotate right --output VGA-1-1 --off --output HDMI-1-1 --off --output DP-1-1 --off")
+
+  ;; Use two monitor
+  (start-process-shell-command "xrandr" nil "xrandr --output VGA-0 --off --output DVI-D-0 --mode 2560x1440 --pos 2160x755 --rotate normal --output HDMI-0 --primary --mode 2560x1440 --pos 0x0 --rotate right --output VGA-1-1 --off --output HDMI-1-1 --off --output DP-1-1 --off")
+  (setq exwm-randr-workspace-monitor-plist '(0 "HDMI-0" 1 "HDMI-0" 2 "HDMI-0" 3 "DVI-D-0" 4 "DVI-D-0" 5 "DVI-D-0" 6 "DVI-D-0" 7 "DVI-D-0" 8 "DVI-D-0" 9 "DVI-D-0"))
 
   ;; react to display connectivity change, do initial display update
   (add-hook 'exwm-randr-screen-change-hook #'efs/update-displays)
   (efs/update-displays)
-
-
-  ;; set wallpaper after changing resolution
-  (efs/set-wallpaper)
-
-  ;; Set the screen resolution (update this to be the correct resolution for your screen!)
-  (require 'exwm-randr)
-  (exwm-randr-enable)
-  ;; (start-process-shell-command "xrandr" nil "xrandr --output Virtual-1 --primary --mode 2048x1152 --pos 0x0 --rotate normal")
-
-  ;; Load the system tray before exwm-init <-> polybar
-  ;; (require 'exwm-systemtray)
-  ;; (exwm-systemtray-enable)
 
   ;; 마우스 커서가 윈도우 따라가게
   (setq exwm-workspace-wrap-cursor t)
@@ -140,7 +132,9 @@
                           (exwm-workspace-switch-create ,i))))
                     (number-sequence 0 9))))
 
-  (exwm-enable))
+  (if (eq system-type 'gnu/linux)
+    (exwm-enable))
+  )
 
 (push ?\C-\\ exwm-input-prefix-keys)
 (require 'exwm-xim)
@@ -208,7 +202,9 @@
 (add-hook 'exwm-workspace-switch-hook #'efs/send-polybar-exwm-workspace)
 
 ;; Start the Polybar panel
-(efs/start-panel)
+(if (eq system-type 'gnu/linux)
+  (efs/start-panel)
+)
 
 ;; Make sure the server is started (better to do this in your main Emacs config!)
 ;; (server-start)

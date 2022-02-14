@@ -66,6 +66,8 @@ LANG=ko_KR.UTF8 nabi &
 |----------------------+----------------------------|
 | list bookmark        | c-x r l                    |
 |----------------------+----------------------------|
+| emacs 종료           | C-x C-c                    |
+|----------------------+----------------------------|
 | org export           | C-c C-e h h                |
 |----------------------+----------------------------|
 | async shell          | M-&                        |
@@ -73,6 +75,8 @@ LANG=ko_KR.UTF8 nabi &
 | async shell          | win-&                      |
 |----------------------+----------------------------|
 | focus switch buff    | C-x w number               |
+|----------------------+----------------------------|
+| Org show images      | C-c C-x C-v                |
 |----------------------+----------------------------|
   rename-file
   M-x check-parens : init.el디버깅
@@ -96,15 +100,15 @@ LANG=ko_KR.UTF8 nabi &
   O : chown
   gG : change the group
   L : load an emacs lisp into emacs
-  C : copy
+  =C : copy=
   = : dired diff
-  + : create a directory
+  =+ : create a directory=
   =D : delete=
   =R : rename / move=
   C-x C-q : vim 모드로 여러파일 이름 변화후 Z Z 하면 저장됨, 
   S : symlinc
   H : hardlink
-  Z : do compress tar.gz
+  Z : do compress/decompress tar.gz
   c : compress selection to a specific file
   X : do shell command =!=
   =m : mark=
@@ -114,6 +118,8 @@ LANG=ko_KR.UTF8 nabi &
   * : options
   */ : select directories
   %m : regex mark
+  & : dired-do-async-shell-command
+  C-ret : open with external
   
 * basic configuration
 ** clean up emacs user interface, make it minimal.
@@ -232,7 +238,7 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
 #+begin_src emacs-lisp
 (defun efs/set-font-faces ()
   (message "Setting faces!")
-  (set-face-attribute 'default nil :family "d2coding" :height 180)
+  (set-face-attribute 'default nil :family "d2coding" :height 135)
   (setq default-input-method "korean-hangul")
   (set-fontset-font t 'hangul (font-spec :name "d2coding"))
   (global-set-key (kbd "S-SPC") 'toggle-input-method))
@@ -378,6 +384,7 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
   - =dired-listing-switches:= try =-agho --group-directories-first= 디렉토리 후 파일 보이게 하는것
   - dired single : dired buffer를 하나로 관리  
   - 특정 확장자를 emacs가 아닌 다른 프로그램으로 열어서 exwm이 열게도 가능\
+  - mupdf 관련세팅 https://www.romanzolatarev.com/xdg-mime.html
 
 #+begin_src emacs-lisp
   ;;mac built in ls does not support group-directories-first
@@ -408,6 +415,17 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
     :config
     (evil-collection-define-key 'normal 'dired-mode-map
       "H" 'dired-hide-dotfiles-mode))
+  (defun mu-open-in-external-app ()
+    "Open the file where point is or the marked files in Dired in external
+    app. The app is chosen from your OS's preference."
+    (interactive)
+    (let* ((file-list
+	    (dired-get-marked-files)))
+     (mapc
+      (lambda (file-path)
+       (let ((process-connection-type nil))
+	(start-process "" nil "xdg-open" file-path))) file-list)))
+  (define-key dired-mode-map (kbd "C-<return>") #'mu-open-in-external-app)
 #+end_src
 
 ** easy motion
@@ -415,26 +433,27 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
 
     ;;easymotion C-'를 트리거로 설정
     (use-package avy)
-    (global-set-key (kbd "C-;") 'avy-goto-char-2)
+    (evil-define-key '(normal visual) 'global
+     "," #'avy-goto-char-2)
 #+end_src
 
 ** evil mc 멀티커서
 #+begin_src emacs-lisp
-    ;;evil-multiedit 힐스너 버전
-    ;(use-package evil-multiedit)
-    ;(evil-multiedit-default-keybinds)
- ;   (use-package evil-mc)
- ;   (global-evil-mc-mode 1)
-  ;; evil-mc
- ; (evil-define-key '(normal visual) 'global
- ;   "gzm" #'evil-mc-make-all-cursors
- ;   "gzu" #'evil-mc-undo-all-cursors
- ;   "gzz" #'+evil/mc-toggle-cursors
- ;   "gzc" #'+evil/mc-make-cursor-here
- ;   "gzn" #'evil-mc-make-and-goto-next-cursor
- ;   "gzp" #'evil-mc-make-and-goto-prev-cursor
- ;   "gzN" #'evil-mc-make-and-goto-last-cursor
- ;   "gzP" #'evil-mc-make-and-goto-first-cursor)
+ ;;evil-multiedit 힐스너 버전
+ ;(use-package evil-multiedit)
+ ;(evil-multiedit-default-keybinds)
+ ;(use-package evil-mc)
+ ;(global-evil-mc-mode 1)
+ ;; evil-mc
+ ;(evil-define-key '(normal visual) 'global
+ ;  "gzm" #'evil-mc-make-all-cursors
+ ;  "gzu" #'evil-mc-undo-all-cursors
+ ;  "gzz" #'+evil/mc-toggle-cursors
+ ;  "gzc" #'+evil/mc-make-cursor-here
+ ;  "gzn" #'evil-mc-make-and-goto-next-cursor
+ ;  "gzp" #'evil-mc-make-and-goto-prev-cursor
+ ;  "gzN" #'evil-mc-make-and-goto-last-cursor
+ ;  "gzP" #'evil-mc-make-and-goto-first-cursor)
  ; (with-eval-after-load 'evil-mc
  ;   (evil-define-key '(normal visual) evil-mc-key-map
  ;     (kbd "C-n") #'evil-mc-make-and-goto-next-cursor
@@ -518,6 +537,11 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
 - ensure nil의 의미는 use-package가 python-mode를 인스톨 하지 않게 함.
 - python실행이 python3을 쓰게 함
 - hook 으로 python-mode에 들어오면 lsp mode사용하게 함
+- C-c p P : pytest -s -v -k test_function_name
+  -s : print문 보이게 함
+  -v : 더 디테일한 정보
+  -k : test_뒤에 있는 이름 기반으로 테스트
+  -x : fail시 멈춤
 
 
 #+begin_src emacs-lisp
@@ -791,6 +815,58 @@ npm i -g typescript-language-server; npm i -g typescript
 *** load vscode debug config
 - dap-debug 실행할때 vscode debug config도 동작함
 
+** magit
+- M-x magit-clone 하고 주소 gl:users/reponame 하고 경로
+- M-x magit-submodule-add
+- C-x g -> magit-status로 바인딩 되어 있음
+  - q로 끄고
+  - g로 리프레시
+  - s는 stage함
+  - u는 unstage함
+  - M-n, M-p 섹션 내에서 이전 다음으로 커서 이동
+  - ^ 키는 해당 섹션의 상위로 커서 이동
+  - c는 commit이고 여기서 C-c C-c하면 커밋 실행
+    ce(extend)는 이전 커밋에 메시지 없이 내용만 추가
+    ca(amend)는 이전 커밋에 amend하는데 메시지 수정
+    cw(reward)는 메시지만 수정 (마지막 커밋메시지만 수정 가능)
+  - 몇번 이전 git log에 커밋하는건 rebase를 이용해서 수정함
+    cF(instant Fixup) 한담에 현재 stage수정을 어느 commit에 넣을지 선택하고 C-c C-c하면 됨. (나가는건 C-c C-k)
+  - branch관련
+    b - s - 새로운 브랜치 이름 (spin off) : upstream에 없는 commit들을 새로운 branch로 이동 하면서 생성 및 master는 이전으로 돌림
+    b - b (checkout)
+  - Push
+    P - p : 동일 이름의 브랜치에 push
+    P - -f - p : -f를 하면 flag가 set 됨
+  - Pull
+    F - p : 동일 이름의 브랜치에서 pull
+    F - u : upstream에서 땡겨오기 (upstream에서 땡긴다던가 origin/master)
+    F - e : 다른 브랜치에서 땡겨오기 (upstream에서 땡긴다던가 origin/master)
+    F - r : 현재 브랜치 설정을 merge가 아닌 rebase로 (pull할때 merge하지 않고 rebase하도록)
+	    그 다음에 땡기면 rebase를 하게됨. conflict는 수정후 r하면 지속 rebase하고 a하면 abort로 최초 상태로 돌아감
+  - Fetch
+    f - p : 동일 이름의 브랜치에서 fetch
+    f - u : upstream에서 땡겨오기 (upstream에서 땡긴다던가 origin/master)
+    f - e : 다른 브랜치에서 땡겨오기 (upstream에서 땡긴다던가 origin/master)
+    f - a : all remote에서 땡겨오기
+  - stash
+    z - z : 로컬 수정(both stage, unstage)을 저장하고 remote를 pull하는 용도.
+    z - a (apply): stash내용을 로콜로 돌리면서 stash는 유지
+    z - p (pop): stash내용을 로컬로 돌리면서 stash기록을 지움
+  - discard
+    x - y :마지막에 했던 수정 돌리기 (evil써야 x이고 원래는 k)
+	   unstage 에 있는 수정내용 되돌리기
+	   untrack에 있는 파일 지우기
+  - .gitignore에 추가
+    i - t : untrack에 있는 파일 .gitignore에 추가할때
+    i - s : untrack에 있는 파일 subdirectory .gitignore에 추가할때
+    i - p : untrack에 있는 파일 .git/info/exclude 에 추가할때 (private한 gitignore)
+
+#+begin_src emacs-lisp
+  (use-package magit
+    :ensure t)
+#+end_src
+
+
 * File/Dir Local Valiables
 Run =M-x normal-mode= to active
 특정 파일/디렉토리에 대한 세팅
@@ -915,8 +991,9 @@ Variables:
 
       (if (eq system-type 'darwin)
           (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-            '("~/workspace/org/tasks.org"
-              "~/workspace/org/test.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
+            '("~/.emacs.d/README.org"
+              "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
+      (setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
   
   ;(advice-add 'org-refile :after 'org-save-all-org-buffers)
   ;이렇게 하면 org-refile실행시 바로 org-save-all-org-buffers가 실행이됨
@@ -924,6 +1001,39 @@ Variables:
 
 #+RESULTS:
 : ((nil :maxlevel . 1) (org-agenda-files :maxlevel . 1))
+
+** hook
+#+begin_src emacs-lisp
+  ;스크린 캡처
+  (add-hook 'org-mode-hook
+    (lambda ()
+      (defun cam ()
+        (interactive)
+        (if buffer-file-name
+          (progn
+	    (message "Waiting for region selection with mouse ...")
+	    (make-directory "./images/" t)
+	    (let ((filename
+	           (concat "./images/"
+	                   (file-name-nondirectory buffer-file-name)
+	          	 "_"
+	          	 (format-time-string "%Y%m%d_%H%M%S")
+	          	 ".png")))
+	      (if (executable-find "scrot")
+	          (call-process "scrot" nil nil nil "-s" filename)
+	          (call-process "screencapture" nil nil nil "-s" filename))
+	      (insert (concat "[[" filename "]]"))
+	      (org-display-inline-images t t)
+	    )
+	    (message "File created and linked ...")
+          )
+          (message "You're in a not saved buffer! Save it first!")
+        )
+      )
+    )
+  )
+  (add-hook 'org-babel-after-execute-hook 'org-redisplay-inline-images)
+#+end_src
 
 ** Head 를 좀더 멋지게 수정
 
@@ -1064,6 +1174,17 @@ Variables:
 - #이렇게 하면 return한 결과가 result에 나옴
 - #+end_src
 
+*변수 넘기는법*
+- #+name: first_block
+- #+BEGIN_SRC python
+- x = 12
+- return x
+- #+END_SRC
+
+- #+BEGIN_RC python :var x=first_block
+- return int(x)+1
+- #+END_SRC
+
 *** Tangle
 - #+PROPERTY: header-args:emacs-lisp :tangle ./init-new.el하면 모든 내용이 저 파일로 옮겨짐
 - org-babel-tangle C-c C-v t 블록을 딴 파일에 저장.
@@ -1107,7 +1228,6 @@ Variables:
    (add-hook 'org-mode-hook (lambda ()(add-hook 'after-save-hook #'efs/org-babel-tangle-config)))
 #+end_src
 
-
 - output파일에 폴더 생성 원할시 =:mkdirp yes= 를 추가
   #+begin_src emacs-lisp
   ;(push '("confi-unix" . confi-unix) org-src-lang-mode)
@@ -1140,10 +1260,17 @@ Variables:
 * Terminal
 ** vterm
 #+begin_src emacs-lisp
+  (if (eq system-type 'darwin)
   (use-package vterm
     :commands vterm
     :config
-    (setq vterm-max-scrollback 10000))
+    (setq vterm-max-scrollback 10000)))
+  (if (eq system-type 'gnu/linux)
+  (use-package vterm
+    :commands vterm
+    :load-path "~/.emacs.d/emacs-libvterm"
+    :config
+    (setq vterm-max-scrollback 10000)))
 #+end_src
 ** eshell
 #+begin_src emacs-lisp
