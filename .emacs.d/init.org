@@ -78,6 +78,8 @@ LANG=ko_KR.UTF8 nabi &
 |----------------------+----------------------------|
 | Org show images      | C-c C-x C-v                |
 |----------------------+----------------------------|
+| Symbol rename        | M-s . -> C-M-% -> !        |
+|----------------------+----------------------------|
   rename-file
   M-x check-parens : init.el디버깅
   describe-bindings =C-h b=
@@ -347,44 +349,59 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
   (global-undo-tree-mode 1))
 #+end_src
 
-** Evil Mode
+** COMMENT Evil Mode
 
 #+begin_src emacs-lisp
-    (use-package evil
-      ;; Pre-load configuration
-      :init
-      (setq evil-want-integration t)
-      (setq evil-want-keybinding nil)
-      (setq evil-want-C-u-scroll t)
-      (setq evil-want-C-i-jump nil)
-      (setq evil-respect-visual-line-mode t)
-      (setq evil-undo-system 'undo-tree)
+  (use-package evil
+    ;; Pre-load configuration
+    :init
+    (setq evil-want-integration t)
+    (setq evil-want-keybinding nil)
+    (setq evil-want-C-u-scroll t)
+    (setq evil-want-C-i-jump nil)
+    (setq evil-respect-visual-line-mode t)
+    (setq evil-undo-system 'undo-tree)
   
-      :config
-      ;; Activate the Evil
-      (evil-mode 1)
+    :config
+    ;; Activate the Evil
+    (evil-mode 1)
   
-      ;; Set Emacs state modes
-      (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
-      (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
+    ;; Set Emacs state modes
+    (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
+    (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
   
-      ;; Use visual line motions even outside of visual-line-mode buffers
-      (evil-global-set-key 'motion "j" 'evil-next-visual-line)
-      (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
+    ;; Use visual line motions even outside of visual-line-mode buffers
+    (evil-global-set-key 'motion "j" 'evil-next-visual-line)
+    (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
   
-      (evil-set-initial-state 'messages-buffer-mode 'normal)
-      (evil-set-initial-state 'dashboard-mode 'normal))
+    (evil-set-initial-state 'messages-buffer-mode 'normal)
+    (evil-set-initial-state 'dashboard-mode 'normal))
   
-    (use-package evil-collection
-      :after evil
-      :config
-      (evil-collection-init))
+  (use-package evil-collection
+    :after evil
+    :config
+    (evil-collection-init))
+
+  ;evil에서 심볼단위 검색 가능하도록 언더바 있으면 선택 안되던 문제 해결
+  (with-eval-after-load 'evil
+    (defalias #'forward-evil-word #'forward-evil-symbol)
+    ;; make evil-search-word look for symbol rather than word boundaries
+    (setq-default evil-symbol-word-search t))
+  
+  ;선택 영역 단어 변경 vim스타일
+  (defun evilcvn-change-symbol-in-defun ()
+    "use string replacing UI in evil-mode to replace the symbol under cursor"
+    (interactive)
+    (let ((old (thing-at-point 'symbol)))
+      (evil-ex (concat "%s/" (if (= 0 (length old)) "" "") old (if (= 0 (length old)) "" "/"))))
+    )
+  (global-set-key (kbd "M-s M-s") 'evilcvn-change-symbol-in-defun)
 #+end_src
 
   - =dired-listing-switches:= try =-agho --group-directories-first= 디렉토리 후 파일 보이게 하는것
   - dired single : dired buffer를 하나로 관리  
   - 특정 확장자를 emacs가 아닌 다른 프로그램으로 열어서 exwm이 열게도 가능\
-  - mupdf 관련세팅 https://www.romanzolatarev.com/xdg-mime.html
+  - mupdf 관련세팅 https://www.romanzolatarev.com/xdg-mime.html
 
 #+begin_src emacs-lisp
   ;;mac built in ls does not support group-directories-first
