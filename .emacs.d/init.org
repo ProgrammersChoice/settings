@@ -141,7 +141,7 @@ LANG=ko_KR.UTF8 nabi &
   (setq visible-bell nil)
   (setq ring-bell-function 'ignore)
   
-  ;; adjust font size
+  ;; adjust font size 
   (defvar efs/default-font-size 180)
   
   ;; set frame transparency
@@ -349,7 +349,7 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
   (global-undo-tree-mode 1))
 #+end_src
 
-** COMMENT Evil Mode
+** Evil Mode
 
 #+begin_src emacs-lisp
   (use-package evil
