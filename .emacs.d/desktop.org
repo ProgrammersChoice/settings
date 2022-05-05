@@ -444,7 +444,7 @@ Also install some icon fonts:
 ** Basic Polybar config
 
 Tangle this to =.config/polybar/config=
-
+:w
 #+begin_src conf :tangle ~/.config/polybar/config :mkdirp yes
   
   ; Docs: https://github.com/polybar/polybar

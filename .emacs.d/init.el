@@ -373,16 +373,16 @@
 (use-package lsp-treemacs
   :after lsp)
 
-(use-package lsp-ivy)
+;(use-package lsp-ivy)
 
-(use-package dap-mode
+;(use-package dap-mode
   ;기존에는 dap-auto-configure-feature변수에 sessions locals breakpoints expressions controls tooltip다보임
   ;그 중 몇개만 보려면 아래처럼 set
   ;:custom
   ;(dap-auto-configure-features '(sessions locals tooltip))
 
   ;breakpoint걸릴때마다 hydra띄우기
-  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+;  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 
 ;요거 python-mode에 추가함
 ;(dap-python-debugger 'debugpy)

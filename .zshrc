@@ -144,12 +144,12 @@ fix_wsl2_interop() {
 export PYENV_ROOT="$HOME/py3env"
 export PATH="$PYENV_ROOT/bin:$HOME/.emacs.d/bin:$PATH"
 #korean
-export GTK_IM_MODULE=uim
-export QT_IM_MODULEuim
-export XMODIFIERS=@im=uim
-export DefaultIMModule=uim
-export XIM=uim
-export UIM_CANDWIN_PROG=uim-candwin-gtk
-if [ $SHLVL -eq 1 ]; then
-      uim-xim &
-fi
+export GTK_IM_MODULE='kime'
+export QT_IM_MODULE='kime'
+export XMODIFIERS='@im=kime'
+export DefaultIMModule='kime'
+export XIM='kime'
+#;export UIM_CANDWIN_PROG=uim-candwin-gtk
+#if [ $SHLVL -eq 1 ]; then
+#      uim-xim &
+#fi
