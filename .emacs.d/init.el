@@ -63,9 +63,18 @@
 ;(setq create-lockfiles nil)
 
 (custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(evil-magit magit ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
+   '(desktop-environment exwm evil-magit magit ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package))
+ '(warning-suppress-types '((comp) (comp))))
 (custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  )
 
 (defun efs/set-font-faces ()
@@ -373,16 +382,16 @@
 (use-package lsp-treemacs
   :after lsp)
 
-;(use-package lsp-ivy)
+(use-package lsp-ivy)
 
-;(use-package dap-mode
+(use-package dap-mode
   ;기존에는 dap-auto-configure-feature변수에 sessions locals breakpoints expressions controls tooltip다보임
   ;그 중 몇개만 보려면 아래처럼 set
   ;:custom
   ;(dap-auto-configure-features '(sessions locals tooltip))
 
   ;breakpoint걸릴때마다 hydra띄우기
-;  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 
 ;요거 python-mode에 추가함
 ;(dap-python-debugger 'debugpy)
@@ -623,7 +632,7 @@
 (if (eq system-type 'gnu/linux)
 (use-package vterm
   :commands vterm
-  :load-path "~/.emacs.d/emacs-libvterm"
+  ;:load-path "~/.emacs.d/emacs-libvterm"
   :config
   (setq vterm-max-scrollback 10000)))
 

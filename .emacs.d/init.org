@@ -732,22 +732,27 @@ npm i -g typescript-language-server; npm i -g typescript
 - symbol 을 입력해서 검색하는것 ;lsp server가 지원할 경우
   lsp-ivy-workspace-symbol
   #+begin_src emacs-lisp
-  ;(use-package lsp-ivy)
+  (use-package lsp-ivy)
   #+end_src
+
+  #+RESULTS:
 
 ** dap-mode
 - Reference : https://emacs-lsp.github.io/dap-mode/page/confiruration/
 
 #+begin_src emacs-lisp
-  ;(use-package dap-mode
+  (use-package dap-mode
     ;기존에는 dap-auto-configure-feature변수에 sessions locals breakpoints expressions controls tooltip다보임
     ;그 중 몇개만 보려면 아래처럼 set
     ;:custom
     ;(dap-auto-configure-features '(sessions locals tooltip))
 
     ;breakpoint걸릴때마다 hydra띄우기
-  ;  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+    :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
 #+end_src
+
+#+RESULTS:
+| lambda | (arg) | (call-interactively #'dap-hydra) |
 
 *** python debugging
 #+begin_src shell
@@ -1285,10 +1290,13 @@ Variables:
   (if (eq system-type 'gnu/linux)
   (use-package vterm
     :commands vterm
-    :load-path "~/.emacs.d/emacs-libvterm"
+    ;:load-path "~/.emacs.d/emacs-libvterm"
     :config
     (setq vterm-max-scrollback 10000)))
 #+end_src
+
+#+RESULTS:
+
 ** eshell
 #+begin_src emacs-lisp
   (defun efs/configure-eshell()
