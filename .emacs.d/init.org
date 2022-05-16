@@ -314,7 +314,7 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
     :init (which-key-mode)
     :diminish which-key-mode
     :config
-    (setq which-key-idle-delay 0))
+    (setq which-key-idle-delay 0.1))
 
   (use-package helpful
     :custom
@@ -361,22 +361,26 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
     (setq evil-want-C-i-jump nil)
     (setq evil-respect-visual-line-mode t)
     (setq evil-undo-system 'undo-tree)
-  
+
     :config
     ;; Activate the Evil
     (evil-mode 1)
-  
+
     ;; Set Emacs state modes
     (define-key evil-insert-state-map (kbd "C-g") 'evil-normal-state)
     (define-key evil-insert-state-map (kbd "C-h") 'evil-delete-backward-char-and-join)
-  
+
     ;; Use visual line motions even outside of visual-line-mode buffers
     (evil-global-set-key 'motion "j" 'evil-next-visual-line)
     (evil-global-set-key 'motion "k" 'evil-previous-visual-line)
-  
+
     (evil-set-initial-state 'messages-buffer-mode 'normal)
     (evil-set-initial-state 'dashboard-mode 'normal))
-  
+
+  (use-package evil-visualstar
+    :ensure t
+    :config
+    (global-evil-visualstar-mode t))
   (use-package evil-collection
     :after evil
     :config
@@ -387,7 +391,7 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
     (defalias #'forward-evil-word #'forward-evil-symbol)
     ;; make evil-search-word look for symbol rather than word boundaries
     (setq-default evil-symbol-word-search t))
-  
+
   ;선택 영역 단어 변경 vim스타일
   (defun evilcvn-change-symbol-in-defun ()
     "use string replacing UI in evil-mode to replace the symbol under cursor"
@@ -512,10 +516,10 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
 * Coding Environment
 ** Projectile
 
-- projectile파일을 폴더에 넣으면 프로젝트로 인식함 .git이 있어도 됨
+- .projectile파일을 폴더에 넣으면 프로젝트로 인식함 .git이 있어도 됨
 - 모든 프로젝타일 키를 =C-c p= 로 트리거하겠다
 - =C-c p f= 이후 =M-o= 하면 메뉴가 많아지는데 스크롤 방법을 모름.
-- counsel-projectil-rg =C-c p s r=
+- counsel-projectil-rg =C-s=
 
 
 #+begin_src emacs-lisp
@@ -529,7 +533,9 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
     :init
     (when (file-directory-p "~/workspace")
       (setq projectile-project-search-path '("~/workspace")))
-    (setq projectile-switch-project-action #'projectile-dired))
+    (setq projectile-switch-project-action #'projectile-dired)
+    :bind
+    ("C-s" . projectile-ripgrep))
 
   ;C-c p f이후 M-o하면 메뉴가 많아지는데 스크롤 방법을 모름.
   ;counsel-projectil-rg = c-p-s-r

@@ -63,18 +63,9 @@
 ;(setq create-lockfiles nil)
 
 (custom-set-variables
- ;; custom-set-variables was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
  '(package-selected-packages
-   '(desktop-environment exwm evil-magit magit ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package))
- '(warning-suppress-types '((comp) (comp))))
+   '(evil-magit magit ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
 (custom-set-faces
- ;; custom-set-faces was added by Custom.
- ;; If you edit it by hand, you could mess it up, so be careful.
- ;; Your init file should contain only one such instance.
- ;; If there is more than one, they won't work right.
  )
 
 (defun efs/set-font-faces ()
@@ -133,7 +124,7 @@
   :init (which-key-mode)
   :diminish which-key-mode
   :config
-  (setq which-key-idle-delay 0))
+  (setq which-key-idle-delay 0.1))
 
 (use-package helpful
   :custom
@@ -188,6 +179,10 @@
   (evil-set-initial-state 'messages-buffer-mode 'normal)
   (evil-set-initial-state 'dashboard-mode 'normal))
 
+(use-package evil-visualstar
+  :ensure t
+  :config
+  (global-evil-visualstar-mode t))
 (use-package evil-collection
   :after evil
   :config
@@ -309,7 +304,9 @@
   :init
   (when (file-directory-p "~/workspace")
     (setq projectile-project-search-path '("~/workspace")))
-  (setq projectile-switch-project-action #'projectile-dired))
+  (setq projectile-switch-project-action #'projectile-dired)
+  :bind
+  ("C-s" . projectile-ripgrep))
 
 ;C-c p f이후 M-o하면 메뉴가 많아지는데 스크롤 방법을 모름.
 ;counsel-projectil-rg = c-p-s-r
