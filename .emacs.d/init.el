@@ -1,25 +1,28 @@
 (setq inhibit-startup-message t)
-
-;(unless dw/is-termux
-(scroll-bar-mode -1)        ; disable visible scrollbar
-(tool-bar-mode -1)          ; disable the toolbar
-(tooltip-mode -1)           ; disable tooltips
-(set-fringe-mode 10)       ; give some breathing room
-
-(menu-bar-mode -1)            ; disable the menu bar
-
-;; set up the visible bell
-(setq visible-bell nil)
-(setq ring-bell-function 'ignore)
-
-;; adjust font size 
-(defvar efs/default-font-size 180)
-
-;; set frame transparency
-(set-frame-parameter (selected-frame) 'alpha '(90 . 90))
-(add-to-list 'default-frame-alist '(alpha . (90 . 90)))
-(set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-(add-to-list 'default-frame-alist '(fullscreen . maximized))
+  
+  ;(unless dw/is-termux
+  (scroll-bar-mode -1)        ; disable visible scrollbar
+  (tool-bar-mode -1)          ; disable the toolbar
+  (tooltip-mode -1)           ; disable tooltips
+  (set-fringe-mode 10)       ; give some breathing room
+  
+  (menu-bar-mode -1)            ; disable the menu bar
+  
+  ;; set up the visible bell
+  (setq visible-bell nil)
+  (setq ring-bell-function 'ignore)
+  
+  ;; adjust font size 
+  (defvar efs/default-font-size 180)
+  
+  ;; set frame transparency
+  (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
+  (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
+  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+  (add-to-list 'default-frame-alist '(fullscreen . maximized))
+  (if (eq system-type 'darwin)
+      (setenv "LIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/11:/opt/homebrew/opt/libgccjit/lib/gcc/11:/opt/homebrew/opt/gcc/lib/gcc/11/gc\
+c/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
 
 (require 'package)
 
@@ -70,7 +73,10 @@
 
 (defun efs/set-font-faces ()
   (message "Setting faces!")
-  (set-face-attribute 'default nil :family "d2coding" :height 135)
+  (if (eq system-type 'darwin)
+     (set-face-attribute 'default nil :family "d2coding" :height 175)) ;macbook
+  (if (eq system-type 'gnu/linux)
+     (set-face-attribute 'default nil :family "d2coding" :height 135)) ;linux
   (setq default-input-method "korean-hangul")
   (set-fontset-font t 'hangul (font-spec :name "d2coding"))
   (global-set-key (kbd "S-SPC") 'toggle-input-method))
@@ -183,6 +189,7 @@
   :ensure t
   :config
   (global-evil-visualstar-mode t))
+
 (use-package evil-collection
   :after evil
   :config
@@ -203,8 +210,8 @@
   )
 (global-set-key (kbd "M-s M-s") 'evilcvn-change-symbol-in-defun)
 
-;;mac built in ls does not support group-directories-first
-;;so brew install coreutils first
+;mac built in ls does not support group-directories-first
+;so brew install coreutils first
 (if (eq system-type 'darwin)
     (setq insert-directory-program "gls" dired-use-ls-dired t))
 (use-package dired-single)
@@ -316,6 +323,15 @@
 (use-package evil-nerd-commenter
 :bind ("M-/" . evilnc-comment-or-uncomment-lines))
 
+(use-package c-mode
+  :ensure nil
+  :hook (c-mode . lsp-deferred) ;c mode켤때 lsp모드 켬
+)
+(use-package c++-mode
+  :ensure nil
+  :hook (c-mode . lsp-deferred) ;cpp mode켤때 lsp모드 켬
+)
+
 (use-package python-mode
   :ensure nil
   :hook (python-mode . lsp-deferred) ;python mode켤때 lsp모드 켬
@@ -328,7 +344,7 @@
 )
 
 (use-package pyvenv
-  :config
+:config
 (pyvenv-mode 1))
 
 (use-package typescript-mode
@@ -336,6 +352,12 @@
   :hook (typescript-mode . lsp-deferred)
   :config
   (setq typescript-indent-level 2))
+
+(use-package yasnippet
+  :ensure t
+  :config
+  (setq yas-snippet-dirs'("~/.emacs.d/snippets"))
+  (yas-global-mode 1))
 
 (defun efs/lsp-mode-setup()
   (setq lsp-headerline-breadcrumb-segments '(path-up-to-project file symbols))
@@ -346,6 +368,7 @@
   :hook (lsp-mode . efs/lsp-mode-setup)
   :init
   (setq lsp-keymap-prefix "C-c l")
+  (setq lsp-idle-delay 0.1)
   :config
   (lsp-enable-which-key-integration t))
 
@@ -382,6 +405,7 @@
 (use-package lsp-ivy)
 
 (use-package dap-mode
+  :ensure t
   ;기존에는 dap-auto-configure-feature변수에 sessions locals breakpoints expressions controls tooltip다보임
   ;그 중 몇개만 보려면 아래처럼 set
   ;:custom
@@ -589,6 +613,7 @@
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((emacs-lisp . t)
+   (C . t)
    (python . t)))
 
 
@@ -629,7 +654,7 @@
 (if (eq system-type 'gnu/linux)
 (use-package vterm
   :commands vterm
-  ;:load-path "~/.emacs.d/emacs-libvterm"
+  :load-path "~/.emacs.d/emacs-libvterm"
   :config
   (setq vterm-max-scrollback 10000)))
 
