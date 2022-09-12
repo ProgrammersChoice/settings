@@ -580,51 +580,35 @@
 
 ;org-capture
 ;org-capture-templates
-;(setq org-capture-templates
-;  `(("t" "Tasks / Projects")
-;    ("tt" "Task" entry (file+olp ,(dw/org-path "Projects.org") "Projects" "Inbox")
-;         "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
-;    ("ts" "Clocked Entry Subtask" entry (clock)
-;         "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
-;    ("tp" "New Project" entry (file+olp ,(dw/org-path "Projects.org") "Projects" "Inbox")
-;         "* PLAN %?\n  %U\n  %a\n  %i" :empty-lines 1)
-;
-;    ("j" "Journal Entries")
-;    ("jj" "Journal" entry
-;         (file+olp+datetree ,(dw/get-todays-journal-file-name))
-;         ;"\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
-;         ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
-;         :clock-in :clock-resume
-;         :empty-lines 1)
-;    ("jm" "Meeting" entry
-;         (file+olp+datetree ,(dw/get-todays-journal-file-name))
-;         "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
-;         :clock-in :clock-resume
-;         :empty-lines 1)
-;    ("jt" "Thinking" entry
-;         (file+olp+datetree ,(dw/get-todays-journal-file-name))
-;         "\n* %<%I:%M %p> - %^{Topic} :thoughts:\n\n%?\n\n"
-;         :clock-in :clock-resume
-;         :empty-lines 1)
-;    ("jc" "Clocked Entry Notes" entry
-;         (file+olp+datetree ,(dw/get-todays-journal-file-name))
-;         "* %<%I:%M %p> - %K :notes:\n\n%?"
-;         :empty-lines 1)
-;    ("jg" "Clocked General Task" entry
-;         (file+olp+datetree ,(dw/get-todays-journal-file-name))
-;         "* %<%I:%M %p> - %^{Task description} %^g\n\n%?"
-;         :clock-in :clock-resume
-;         :empty-lines 1)
-;
-;    ("w" "Workflows")
-;    ("we" "Checking Email" entry (file+olp+datetree ,(dw/get-todays-journal-file-name))
-;         "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
-;
-;    ("m" "Metrics Capture")
-;    ("mw" "Weight" table-line (file+headline "~/Notes/Metrics.org" "Weight")
-;     "| %U | %^{Weight} | %^{Notes} |" :kill-buffer)
-;    ("mp" "Blood Pressure" table-line (file+headline "~/Notes/Metrics.org" "Blood Pressure")
-;     "| %U | %^{Systolic} | %^{Diastolic} | %^{Notes}" :kill-buffer)))
+(setq org-capture-templates
+  `(("t" "Tasks / Projects")
+    ("tt" "Task" entry (file+olp "~/workspace/org/tasks.org" "Inbox")
+         "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
+
+    ("j" "Journal Entries")
+    ("jj" "Journal" entry
+         (file+olp+datetree "~/.emacs.d/README.org")
+         "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
+         ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
+         :clock-in :clock-resume
+         :empty-lines 1)
+    ;("jm" "Meeting" entry
+    ;     (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+    ;     "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
+    ;     :clock-in :clock-resume
+    ;     :empty-lines 1)
+
+    ;("w" "Workflows")
+    ;("we" "Checking Email" entry (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+    ;     "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
+
+    ;("m" "Metrics Capture")
+    ;("mw" "Weight" table-line (file+headline "~/Projects/Code/emacs-from-scratch/OrgFiles/Metrics.org" "Weight")
+    ; "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)
+    ))
+
+(define-key global-map (kbd "C-c j")
+  (lambda () (interactive) (org-capture nil "jj")))
 
 (use-package org
 :ensure org-plus-contrib)
@@ -736,18 +720,18 @@
     (member tag-name (org-roam-node-tags node))))
 
 ;org-roam-node-list가 없어서 주석처리
-;(defun my/org-roam-list-notes-by-tag (tag-name)
-;  (mapcar #'org-roam-node-file
-;          (seq-filter
-;           (my/org-roam-filter-by-tag tag-name)
-;           (org-roam-node-list))))
-;
-;(defun my/org-roam-refresh-agenda-list ()
-;  (interactive)
-;  (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
-;
-;;; Build the agenda list the first time for the session
-;(my/org-roam-refresh-agenda-list)
+(defun my/org-roam-list-notes-by-tag (tag-name)
+  (mapcar #'org-roam-node-file
+          (seq-filter
+           (my/org-roam-filter-by-tag tag-name)
+           (org-roam-node-list))))
+
+(defun my/org-roam-refresh-agenda-list ()
+  (interactive)
+  (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
+
+;; Build the agenda list the first time for the session
+(my/org-roam-refresh-agenda-list)
 
 ;; Bind this to C-c n I ; 첫 캡처템플릿으로 만들기만하고 현 buffer에 머무르기
 (defun org-roam-node-insert-immediate (arg &rest args)
