@@ -81,8 +81,10 @@ LANG=ko_KR.UTF8 nabi &
 | Symbol rename        | M-s . -> C-M-% -> !        |
 |----------------------+----------------------------|
   rename-file
-  M-x check-parens : init.el디버깅
+  M-x check-parens : init.el디버깅 괄호 틀린지
   describe-bindings =C-h b=
+  describe-variable =C-h v=
+  describe-function =C-h f=
   M-x proced =x= send signal
   (start-process-shell-command "tool" nil "vim ~/test.txt") : 비동기로 출력없이 실행
 
@@ -127,23 +129,24 @@ LANG=ko_KR.UTF8 nabi &
 ** clean up emacs user interface, make it minimal.
 
 #+begin_src emacs-lisp
+  ;; -*- lexical-binding: t; -*-
   (setq inhibit-startup-message t)
-  
+ 
   ;(unless dw/is-termux
   (scroll-bar-mode -1)        ; disable visible scrollbar
   (tool-bar-mode -1)          ; disable the toolbar
   (tooltip-mode -1)           ; disable tooltips
   (set-fringe-mode 10)       ; give some breathing room
-  
+ 
   (menu-bar-mode -1)            ; disable the menu bar
-  
+ 
   ;; set up the visible bell
   (setq visible-bell nil)
   (setq ring-bell-function 'ignore)
-  
+ 
   ;; adjust font size 
   (defvar efs/default-font-size 180)
-  
+ 
   ;; set frame transparency
   (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
   (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
@@ -151,9 +154,25 @@ LANG=ko_KR.UTF8 nabi &
   (add-to-list 'default-frame-alist '(fullscreen . maximized))
   (if (eq system-type 'darwin)
       (setenv "LIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/11:/opt/homebrew/opt/libgccjit/lib/gcc/11:/opt/homebrew/opt/gcc/lib/gcc/11/gc\
-c/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
+ /aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
+  (if (eq system-type 'darwin)
+      (setenv "LD_lIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/11:/opt/homebrew/opt/libgccjit/lib/gcc/11:/opt/homebrew/opt/gcc/lib/gcc/11/gc\
+ /aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
+  (if (eq system-type 'darwin)
+       (add-to-list 'exec-path "/opt/homebrew/bin"))
 #+end_src
 
+ - auto-package-update-now #이걸로 바로 가능함
+#+begin_src emacs-lisp
+(use-package auto-package-update
+  :custom
+  (auto-package-update-interval 7)
+  (auto-package-update-prompt-before-update t)
+  (auto-package-update-hide-results t)
+  :config
+  (auto-package-update-maybe)
+  (auto-package-update-at-time "09:00"))
+#+end_src
 ** package setup
 
 - use-package는
@@ -382,7 +401,14 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
   
     (evil-set-initial-state 'messages-buffer-mode 'normal)
     (evil-set-initial-state 'dashboard-mode 'normal))
-  
+  ;ysiw 한담에 ' 하면 해당단어 ''로 서라운드
+  ;ds 는 지우기
+  ;cs 는 바꾸기
+  ;선택한담에 S하면 선택한부분 surround
+  (use-package evil-surround
+    :ensure t
+    :config
+    (global-evil-surround-mode 1))
   (use-package evil-visualstar
     :ensure t
     :config
@@ -408,6 +434,9 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
     )
   (global-set-key (kbd "M-s M-s") 'evilcvn-change-symbol-in-defun)
 #+end_src
+
+#+RESULTS:
+| (lambda nil (setq evil-input-method nil)) | evil-maybe-expand-abbrev | evil-stop-track-last-insertion | evil-cleanup-insert-state | doom-modeline-update-buffer-file-name |
 
   - =dired-listing-switches:= try =-agho --group-directories-first= 디렉토리 후 파일 보이게 하는것
   - dired single : dired buffer를 하나로 관리  
@@ -639,7 +668,13 @@ Commands:
 - M-x yas-new-snippet 하고 끝날때는 C-x C-s 로 저장
   
  $0 이 마지막 위치
- ${1:hint}
+ $1{:hint}
+
+ 지정된 mode에서 단축어 누르고 tab누르면 실행됨
+ <code-emacs 하고 탭
+ <code-python 하고 탭
+ <code-cpp 하고 탭
+
  
 #+begin_src emacs-lisp
   (use-package yasnippet
@@ -992,12 +1027,34 @@ Variables:
  check list [ ]  안에 X넣어도 되고 =C-c C-x C-b= C를 홀드 하고 cxb하면 됨
               =S-M-<ret>= 하면 체크박스 추가됨 (list에서 이키는 체크박스 추가)딴데서는 todo로 사용됨
 - souce block
-  #+begin_src python
-  source
+  #+begin_src python :results output
+  #이렇게 하면 print한 결과가 result에 나옴
   #+end_src
+
 
 - TODO
  TODO는 heading에서 todo입력하면 됨 =C-c C-t= 하면 done으로 바뀜 S-방향키 해도 됨
+
+- *bold*, /test/, _underlined_, =verbatim= and ~code~
+  * b *, / i / , _ u _ , = v =, ~ c ~
+#+BEGIN_SRC emacs-lisp :results output
+(setq org-emphasis-alist
+	'(("*" (bold :foreground "red"))
+      ("_" underline)
+	  ("/" italic)
+	  ("=" org-verbatim verbatim)
+	  ("~" org-code verbatim)
+	  ("+" (:strike-through t))))
+
+ #+END_SRC
+
+ 
+ C-x X h h : 하이라이트 하기
+ C-x X u r : 하이라이트 지우기
+ #+BEGIN_SRC emacs-lisp :results output
+   (use-package highlight
+     :ensure t)
+ #+END_SRC
 
 ** Org 단축키
 - org-agenda org-agenda-list
@@ -1030,28 +1087,28 @@ Variables:
 ** Org custom 설정
 
 #+begin_src emacs-lisp
-    (use-package org
-      :hook (org-mode . efs/org-mode-setup) ;훅을 쓰는 이유는 org buffer시작할때마다 위에설정 호출해서 그버퍼는 변수상태로 셋업하기 위함.
-      :config
-      (setq org-ellipsis " ▾" ; S-tab하면 ... 나오는걸 이걸로 바꾸기 위함
-            org-hide-emphasis-markers t) ;bold link등 */같은거 안보이게
-      (setq org-agenda-start-with-log-mode t)
-      (setq org-log-done 'time)
-      (setq org-log-into-drawer t)
-  
-      ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
-      (setq org-todo-keywords
-            '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
-              (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
-      (setq org-refile-targets
-            '((nil :maxlevel . 1)
-             (org-agenda-files :maxlevel . 1))))
+  (use-package org
+    :hook (org-mode . efs/org-mode-setup) ;훅을 쓰는 이유는 org buffer시작할때마다 위에설정 호출해서 그버퍼는 변수상태로 셋업하기 위함.
+    :config
+    (setq org-ellipsis " ▾" ; S-tab하면 ... 나오는걸 이걸로 바꾸기 위함
+          org-hide-emphasis-markers t) ;bold link등 */같은거 안보이게
+    (setq org-agenda-start-with-log-mode t)
+    (setq org-log-done 'time)
+    (setq org-log-into-drawer t)
 
-      (if (eq system-type 'darwin)
-          (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-            '("~/.emacs.d/README.org"
-              "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
-      (setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
+    ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
+    (setq org-todo-keywords
+          '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
+            (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
+    (setq org-refile-targets
+          '((nil :maxlevel . 1)
+           (org-agenda-files :maxlevel . 1))))
+
+  (if (eq system-type 'darwin)
+      (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
+        '("~/.emacs.d/README.org"
+          "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
+  (setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
   
   ;(advice-add 'org-refile :after 'org-save-all-org-buffers)
   ;이렇게 하면 org-refile실행시 바로 org-save-all-org-buffers가 실행이됨
@@ -1098,8 +1155,8 @@ Variables:
 #+begin_src emacs-lisp
   ;head마다 다른 사이즈
   (require 'org-faces)
-  (dolist (face '((org-level-1 . 1.2)
-                  (org-level-2 . 1.1)
+  (dolist (face '((org-level-1 . 1.1)
+                  (org-level-2 . 1.07)
                   (org-level-3 . 1.05)
                   (org-level-4 . 1.0)
                   (org-level-5 . 1.0)
@@ -1112,7 +1169,7 @@ Variables:
     :after org
     :hook (org-mode . org-bullets-mode)
     :custom
-    (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+    (org-bullets-bullet-list '("*" "○" "●" "○" "●" "○" "●")))
 
   ; list hyphen 을 dot으로 수정
   ; 정규식으로 이걸 만듬
@@ -1317,6 +1374,196 @@ Variables:
 
 #+RESULTS:
 : 155
+
+
+** Org Roam
+*** install
+- v2버전의 org roam부터 sqlite가 필요함
+- sqlite가 설치되었는지 확인하는 변수 *org-roam--sqlite-available-p*
+  이걸 describe value C-h v 로 확인하자
+- 몇자 입력하고 M-x completion-at-point 입력하면 roam: link 가 생성됨
+
+#+BEGIN_SRC emacs-lisp
+  (use-package org-roam
+    :ensure t
+    :init
+    (setq org-roam-v2-ack t) ;roam v1쓸경우 팝업창 뜨는걸 방지
+    :custom
+    (org-roam-directory "~/Notes")
+    (org-roam-completion-everywhere t)
+    (org-roam-capture-templates
+     '(("d" "default" plain
+        "%?"
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+        :unnarrowed t)
+       ("b" "book notes" plain
+          (file "~/.emacs.d/Templates/BookNote.org")
+          :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+          :unnarrowed t)
+       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+        :unnarrowed t)
+       ))
+    (org-roam-dailies-capture-templates
+     '(("d" "default" entry "* %?  =%<<%I:%M %p>>=\n"
+        :if-new (file+head "%<%Y-%m-%d>.org" "#+title: <%Y-%m-%d>\n"))))
+    :bind (("C-c n b" . org-roam-buffer-toggle)
+           ("C-c n f" . org-roam-node-find)
+           ("C-c n i" . org-roam-node-insert)
+           ("C-c n l" . org-id-get-create)
+           ("C-c n g" . org-roam-graph)
+           :map org-mode-map
+           ("C-M-i" . completion-at-point)
+           :map org-roam-dailies-map
+           ("Y" . org-roam-dailies-capture-yesterday)
+           ("T" . org-roam-dailies-capture-tomorrow)
+           ("g" . org-roam-dailies-goto-date)
+           ("G" . org-roam-dailies-capture-date))
+    :bind-keymap
+    ("C-c n d" . org-roam-dailies-map)
+    :config
+    (require 'org-roam-dailies)
+    (org-roam-setup)
+    (org-roam-db-autosync-mode))
+  
+  ;(setq org-roam-dailies-directory "journal/") ;daily가 아닌 폴더를 하위폴더로 쓸 경우 지정필요
+  
+  ;;필요한 함수 셋업
+  (defun org-roam-node-insert-immediate (arg &rest args)
+    (interactive "P")
+    (let ((args (push arg args))
+          (org-roam-capture-templates (list (append (car org-roam-capture-templates)
+                                                    '(:immediate-finish t)))))
+      (apply #'org-roam-node-insert args)))
+  
+  (defun my/org-roam-filter-by-tag (tag-name)
+    (lambda (node)
+      (member tag-name (org-roam-node-tags node))))
+  
+  ;org-roam-node-list가 없어서 주석처리
+  ;(defun my/org-roam-list-notes-by-tag (tag-name)
+  ;  (mapcar #'org-roam-node-file
+  ;          (seq-filter
+  ;           (my/org-roam-filter-by-tag tag-name)
+  ;           (org-roam-node-list))))
+  ;
+  ;(defun my/org-roam-refresh-agenda-list ()
+  ;  (interactive)
+  ;  (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
+  ;
+  ;;; Build the agenda list the first time for the session
+  ;(my/org-roam-refresh-agenda-list)
+  
+  ;; Bind this to C-c n I ; 첫 캡처템플릿으로 만들기만하고 현 buffer에 머무르기
+  (defun org-roam-node-insert-immediate (arg &rest args)
+    (interactive "P")
+    (let ((args (cons arg args))
+          (org-roam-capture-templates (list (append (car org-roam-capture-templates)
+                                                    '(:immediate-finish t)))))
+      (apply #'org-roam-node-insert args)))
+  
+  
+  ;; 특정 tag의 note list를 선택하기
+  (defun my/org-roam-project-finalize-hook ()
+    "Adds the captured project file to `org-agenda-files' if the
+  capture was not aborted."
+    ;; Remove the hook since it was added temporarily
+    (remove-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
+  
+    ;; Add project file to the agenda list if the capture was confirmed
+    (unless org-note-abort
+      (with-current-buffer (org-capture-get :buffer)
+        (add-to-list 'org-agenda-files (buffer-file-name)))))
+  
+  (defun my/org-roam-find-project ()
+    (interactive)
+    ;; Add the project file to the agenda after capture is finished
+    (add-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
+  
+    ;; Select a project file to open, creating it if necessary
+    (org-roam-node-find
+     nil
+     nil
+     (my/org-roam-filter-by-tag "Project")
+     :templates
+     '(("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+category: ${title}\n#+filetags: Project")
+        :unnarrowed t))))
+  
+  ;;지금 쓰는것과 상관없는거 떠오를때 inbox.org에 임시저장하기 위한것
+  (defun my/org-roam-capture-inbox ()
+    (interactive)
+    (org-roam-capture- :node (org-roam-node-create)
+                       :templates '(("i" "inbox" plain "* %?"
+                                    :if-new (file+head "Inbox.org" "#+title: Inbox\n")))))
+  
+  
+  ;capture a task directly into a specific project
+  (defun my/org-roam-capture-task ()
+    (interactive)
+    ;; Add the project file to the agenda after capture is finished
+    (add-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
+  
+    ;; Capture the new task, creating the project file if necessary
+    (org-roam-capture- :node (org-roam-node-read
+                              nil
+                              (my/org-roam-filter-by-tag "Project"))
+                       :templates '(("p" "project" plain "* TODO %?"
+                                     :if-new (file+head+olp "%<%Y%m%d%H%M%S>-${slug}.org"
+                                                            "#+title: ${title}\n#+category: ${title}\n#+filetags: Project"
+                                                            ("Tasks"))))))
+  (defun my/org-roam-copy-todo-to-today ()
+    (interactive)
+    (let ((org-refile-keep t) ;; Set this to nil to delete the original!
+          (org-roam-dailies-capture-templates
+            '(("t" "tasks" entry "%?"
+               :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Tasks")))))
+          (org-after-refile-insert-hook #'save-buffer)
+          today-file
+          pos)
+      (save-window-excursion
+        (org-roam-dailies--capture (current-time) t)
+        (setq today-file (buffer-file-name))
+        (setq pos (point)))
+  
+      ;; Only refile if the target file is different than the current file
+      (unless (equal (file-truename today-file)
+                     (file-truename (buffer-file-name)))
+        (org-refile nil nil (list "Tasks" today-file nil pos)))))
+  
+  (add-to-list 'org-after-todo-state-change-hook
+               (lambda ()
+                 (when (equal org-state "DONE")
+                   (my/org-roam-copy-todo-to-today)))) 
+  (global-set-key (kbd "C-c n t") #'my/org-roam-capture-task)
+  (global-set-key (kbd "C-c n T") #'my/org-roam-capture-inbox)
+  (global-set-key (kbd "C-c n p") #'my/org-roam-find-project)
+#+END_SRC
+
+*** usage
+- zettelcasten 방법을 사용
+- *C-c n f* : 찾기 혹은 node 만들기
+   capture buffer가 org node를 위해 만들어짐 다양한 템플릿을 지원하기 위해
+- C-c C-c : 이 capture를 file에 저장
+- C-c n i : 다른 롬 파일 링크 생성, 없는걸 만들면서 링크 생성할수도 있음
+- *C-c n I* : 다른 롬 파일 링크 생성, 없는걸 만들면서 링크 생성하고 현버퍼에 있기
+- *C-c n T* : 다른 롬 파일 링크 생성, 없는걸 만들면서 현버퍼에 있기
+- C-M-i : title앞부분 입력후 이 키 입력시 링크가 바로 생성됨
+- C-c n l : 파일 중간 부분 링크 생성 -> 헤딩 노드만 생성 M-x org-id-get-create 
+- node에 alias추가 가능 : 헤더에 가서 M-x org-roam-alias-add 하면되고 여러개 추가도 가능
+- C-c n b : backlink 나를 링크한곳 모아 보기 * org-roam * 이라는 이름의 버퍼에서 보여줌
+- [[https://www.youtube.com/watch?v=YxgA5z2R08I][Capturing Youtube]]
+- [[https://youtu.be/3-sLBaJAtew][Org Roam daily]] : *C-c n d n* : 새폴더 만들기
+                   *C-c n d d* : 오늘 모은거 다보기
+                   *C-c n d T* : 내일꺼 작성하기
+                   *C-c n d Y* : 어제꺼 작성하기
+                   *C-c n d G* : 특정일꺼 작성하기
+                   *C-c n d t* : 내일 모은거 다보기
+                   *C-c n d y* : 어제 모은거 다보기
+                   *C-c n d G* : 특정일 모은거 다보기
+                   *C-c n d b* : 현재파일 이전날 보기
+                   *C-c n d f* : 현재파일 다음날 보기
+
 * Terminal
 ** vterm
 #+begin_src emacs-lisp
@@ -1514,11 +1761,9 @@ Tip from *Cedrif Daf*: Set =aw-keys= to home-row keys for more convenience:
 This mode shows numbers in your windows' mode lines to tell you what keys you can press after using the key binding =C-x w=.  Check out the [[https://github.com/deb0ch/emacs-winum][winum-mode]] page for more useful tips!
 
 #+begin_src emacs-lisp
-
   (use-package winum
     :config
     (winum-mode))
-
 #+end_src
 
 

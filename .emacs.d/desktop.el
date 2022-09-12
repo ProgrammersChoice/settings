@@ -73,12 +73,8 @@
   ;(start-process-shell-command "xrandr" nil "xrandr --output VGA-0 --off output DVI-D-0 --off --output HDMI-0 --mode 2560x1440 --pos 0x0 --rotate right --output VGA-1-1 --off --output HDMI-1-1 --off --output DP-1-1 --off")
 
   ;; Use two monitor
-  ;(start-process-shell-command "xrandr" nil "xrandr --output VGA-0 --off --output DVI-D-0 --mode 2560x1440 --pos 2160x755 --rotate normal --output HDMI-3 --primary --mode 2560x1440 --pos 0x0 --rotate right --output VGA-1-1 --off --output HDMI-1-1 --off --output DP-1-1 --off")
-  ;(setq exwm-randr-workspace-monitor-plist '(0 "HDMI-0" 1 "HDMI-0" 2 "HDMI-0" 3 "DVI-D-0" 4 "DVI-D-0" 5 "DVI-D-0" 6 "DVI-D-0" 7 "DVI-D-0" 8 "DVI-D-0" 9 "DVI-D-0"))
-
-  ;home
-  (start-process-shell-command "xrandr" nil "xrandr --output HDMI-3 --primary --mode 1920x1200 --pos 0x0 --rotate left --output VGA-1-1 --off --output HDMI-1-1 --off --output DP-1-1 --off")
-  (setq exwm-randr-workspace-monitor-plist '(0 "HDMI-3" 1 "HDMI-3" 2 "HDMI-3" 3 "HDMI-3" 4 "HDMI-3" 5 "HDMI-3" 6 "HDMI-3" 7 "HDMI-3" 8 "HDMI-3" 9 "HDMI-3"))
+  (start-process-shell-command "xrandr" nil "xrandr --output VGA-0 --off --output DVI-D-0 --mode 2560x1440 --pos 2160x755 --rotate normal --output HDMI-0 --primary --mode 2560x1440 --pos 0x0 --rotate right --output VGA-1-1 --off --output HDMI-1-1 --off --output DP-1-1 --off")
+  (setq exwm-randr-workspace-monitor-plist '(0 "HDMI-0" 1 "HDMI-0" 2 "HDMI-0" 3 "DVI-D-0" 4 "DVI-D-0" 5 "DVI-D-0" 6 "DVI-D-0" 7 "DVI-D-0" 8 "DVI-D-0" 9 "DVI-D-0"))
 
   ;; react to display connectivity change, do initial display update
   (add-hook 'exwm-randr-screen-change-hook #'efs/update-displays)

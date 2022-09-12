@@ -1,0 +1,13 @@
+# -*- mode: snippet -*-
+# name: code-cpp
+# key: <code-cpp
+# --
+
+#+BEGIN_SRC ${1:C++}
+  #include <iostream>
+  int main()
+  {
+    $0
+    std::cout<<"hello world!\n";
+  }
+#+END_SRC

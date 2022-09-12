@@ -1,28 +1,43 @@
-(setq inhibit-startup-message t)
-  
-  ;(unless dw/is-termux
-  (scroll-bar-mode -1)        ; disable visible scrollbar
-  (tool-bar-mode -1)          ; disable the toolbar
-  (tooltip-mode -1)           ; disable tooltips
-  (set-fringe-mode 10)       ; give some breathing room
-  
-  (menu-bar-mode -1)            ; disable the menu bar
-  
-  ;; set up the visible bell
-  (setq visible-bell nil)
-  (setq ring-bell-function 'ignore)
-  
-  ;; adjust font size 
-  (defvar efs/default-font-size 180)
-  
-  ;; set frame transparency
-  (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
-  (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
-  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
-  (add-to-list 'default-frame-alist '(fullscreen . maximized))
-  (if (eq system-type 'darwin)
-      (setenv "LIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/11:/opt/homebrew/opt/libgccjit/lib/gcc/11:/opt/homebrew/opt/gcc/lib/gcc/11/gc\
-c/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
+;; -*- lexical-binding: t; -*-
+ (setq inhibit-startup-message t)
+
+ ;(unless dw/is-termux
+ (scroll-bar-mode -1)        ; disable visible scrollbar
+ (tool-bar-mode -1)          ; disable the toolbar
+ (tooltip-mode -1)           ; disable tooltips
+ (set-fringe-mode 10)       ; give some breathing room
+
+ (menu-bar-mode -1)            ; disable the menu bar
+
+ ;; set up the visible bell
+ (setq visible-bell nil)
+ (setq ring-bell-function 'ignore)
+
+ ;; adjust font size 
+ (defvar efs/default-font-size 180)
+
+ ;; set frame transparency
+ (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
+ (add-to-list 'default-frame-alist '(alpha . (90 . 90)))
+ (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
+ (add-to-list 'default-frame-alist '(fullscreen . maximized))
+ (if (eq system-type 'darwin)
+     (setenv "LIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/11:/opt/homebrew/opt/libgccjit/lib/gcc/11:/opt/homebrew/opt/gcc/lib/gcc/11/gc\
+/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
+ (if (eq system-type 'darwin)
+     (setenv "LD_lIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/11:/opt/homebrew/opt/libgccjit/lib/gcc/11:/opt/homebrew/opt/gcc/lib/gcc/11/gc\
+/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
+ (if (eq system-type 'darwin)
+      (add-to-list 'exec-path "/opt/homebrew/bin"))
+
+(use-package auto-package-update
+  :custom
+  (auto-package-update-interval 7)
+  (auto-package-update-prompt-before-update t)
+  (auto-package-update-hide-results t)
+  :config
+  (auto-package-update-maybe)
+  (auto-package-update-at-time "09:00"))
 
 (require 'package)
 
@@ -184,7 +199,14 @@ c/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/
 
   (evil-set-initial-state 'messages-buffer-mode 'normal)
   (evil-set-initial-state 'dashboard-mode 'normal))
-
+;ysiw 한담에 ' 하면 해당단어 ''로 서라운드
+;ds 는 지우기
+;cs 는 바꾸기
+;선택한담에 S하면 선택한부분 surround
+(use-package evil-surround
+  :ensure t
+  :config
+  (global-evil-surround-mode 1))
 (use-package evil-visualstar
   :ensure t
   :config
@@ -448,6 +470,17 @@ c/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/
 ;; eval; (eldoc-mode 0)
 ;; End:
 
+(setq org-emphasis-alist
+	'(("*" (bold :foreground "red"))
+      ("_" underline)
+	  ("/" italic)
+	  ("=" org-verbatim verbatim)
+	  ("~" org-code verbatim)
+	  ("+" (:strike-through t))))
+
+(use-package highlight
+  :ensure t)
+
 (defun efs/org-mode-setup()
   (org-indent-mode)
   ;(variable-pitch-mode 1)
@@ -457,27 +490,27 @@ c/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/
                                         ;(use-package toc-org)
 
 (use-package org
-    :hook (org-mode . efs/org-mode-setup) ;훅을 쓰는 이유는 org buffer시작할때마다 위에설정 호출해서 그버퍼는 변수상태로 셋업하기 위함.
-    :config
-    (setq org-ellipsis " ▾" ; S-tab하면 ... 나오는걸 이걸로 바꾸기 위함
-          org-hide-emphasis-markers t) ;bold link등 */같은거 안보이게
-    (setq org-agenda-start-with-log-mode t)
-    (setq org-log-done 'time)
-    (setq org-log-into-drawer t)
+  :hook (org-mode . efs/org-mode-setup) ;훅을 쓰는 이유는 org buffer시작할때마다 위에설정 호출해서 그버퍼는 변수상태로 셋업하기 위함.
+  :config
+  (setq org-ellipsis " ▾" ; S-tab하면 ... 나오는걸 이걸로 바꾸기 위함
+        org-hide-emphasis-markers t) ;bold link등 */같은거 안보이게
+  (setq org-agenda-start-with-log-mode t)
+  (setq org-log-done 'time)
+  (setq org-log-into-drawer t)
 
-    ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
-    (setq org-todo-keywords
-          '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
-            (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
-    (setq org-refile-targets
-          '((nil :maxlevel . 1)
-           (org-agenda-files :maxlevel . 1))))
+  ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
+  (setq org-todo-keywords
+        '((sequenct "TODO(t)" "NEXT(n)" "|" "DONE(d!)")
+          (sequence "BACKLOG(b)" "PLAN(p)" "READY(r)" "ACTIVITE(a)" "REVIEW(v)" "WAIT(w@/!)" "|" "COMPLETED(c)" "CANC(k@)")))
+  (setq org-refile-targets
+        '((nil :maxlevel . 1)
+         (org-agenda-files :maxlevel . 1))))
 
-    (if (eq system-type 'darwin)
-        (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-          '("~/.emacs.d/README.org"
-            "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
-    (setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
+(if (eq system-type 'darwin)
+    (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
+      '("~/.emacs.d/README.org"
+        "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
+(setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
 
 ;(advice-add 'org-refile :after 'org-save-all-org-buffers)
 ;이렇게 하면 org-refile실행시 바로 org-save-all-org-buffers가 실행이됨
@@ -514,8 +547,8 @@ c/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/
 
 ;head마다 다른 사이즈
 (require 'org-faces)
-(dolist (face '((org-level-1 . 1.2)
-                (org-level-2 . 1.1)
+(dolist (face '((org-level-1 . 1.1)
+                (org-level-2 . 1.07)
                 (org-level-3 . 1.05)
                 (org-level-4 . 1.0)
                 (org-level-5 . 1.0)
@@ -528,7 +561,7 @@ c/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/
   :after org
   :hook (org-mode . org-bullets-mode)
   :custom
-  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+  (org-bullets-bullet-list '("*" "○" "●" "○" "●" "○" "●")))
 
 ; list hyphen 을 dot으로 수정
 ; 정규식으로 이걸 만듬
@@ -645,6 +678,161 @@ c/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/
 ;(push '("confi-unix" . confi-unix) org-src-lang-mode)
 
 ;(+ 55 100)
+
+(use-package org-roam
+  :ensure t
+  :init
+  (setq org-roam-v2-ack t) ;roam v1쓸경우 팝업창 뜨는걸 방지
+  :custom
+  (org-roam-directory "~/Notes")
+  (org-roam-completion-everywhere t)
+  (org-roam-capture-templates
+   '(("d" "default" plain
+      "%?"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+      :unnarrowed t)
+     ("b" "book notes" plain
+        (file "~/.emacs.d/Templates/BookNote.org")
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+        :unnarrowed t)
+     ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+      :unnarrowed t)
+     ))
+  (org-roam-dailies-capture-templates
+   '(("d" "default" entry "* %?  =%<<%I:%M %p>>=\n"
+      :if-new (file+head "%<%Y-%m-%d>.org" "#+title: <%Y-%m-%d>\n"))))
+  :bind (("C-c n b" . org-roam-buffer-toggle)
+         ("C-c n f" . org-roam-node-find)
+         ("C-c n i" . org-roam-node-insert)
+         ("C-c n l" . org-id-get-create)
+         ("C-c n g" . org-roam-graph)
+         :map org-mode-map
+         ("C-M-i" . completion-at-point)
+         :map org-roam-dailies-map
+         ("Y" . org-roam-dailies-capture-yesterday)
+         ("T" . org-roam-dailies-capture-tomorrow)
+         ("g" . org-roam-dailies-goto-date)
+         ("G" . org-roam-dailies-capture-date))
+  :bind-keymap
+  ("C-c n d" . org-roam-dailies-map)
+  :config
+  (require 'org-roam-dailies)
+  (org-roam-setup)
+  (org-roam-db-autosync-mode))
+
+;(setq org-roam-dailies-directory "journal/") ;daily가 아닌 폴더를 하위폴더로 쓸 경우 지정필요
+
+;;필요한 함수 셋업
+(defun org-roam-node-insert-immediate (arg &rest args)
+  (interactive "P")
+  (let ((args (push arg args))
+        (org-roam-capture-templates (list (append (car org-roam-capture-templates)
+                                                  '(:immediate-finish t)))))
+    (apply #'org-roam-node-insert args)))
+
+(defun my/org-roam-filter-by-tag (tag-name)
+  (lambda (node)
+    (member tag-name (org-roam-node-tags node))))
+
+;org-roam-node-list가 없어서 주석처리
+;(defun my/org-roam-list-notes-by-tag (tag-name)
+;  (mapcar #'org-roam-node-file
+;          (seq-filter
+;           (my/org-roam-filter-by-tag tag-name)
+;           (org-roam-node-list))))
+;
+;(defun my/org-roam-refresh-agenda-list ()
+;  (interactive)
+;  (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
+;
+;;; Build the agenda list the first time for the session
+;(my/org-roam-refresh-agenda-list)
+
+;; Bind this to C-c n I ; 첫 캡처템플릿으로 만들기만하고 현 buffer에 머무르기
+(defun org-roam-node-insert-immediate (arg &rest args)
+  (interactive "P")
+  (let ((args (cons arg args))
+        (org-roam-capture-templates (list (append (car org-roam-capture-templates)
+                                                  '(:immediate-finish t)))))
+    (apply #'org-roam-node-insert args)))
+
+
+;; 특정 tag의 note list를 선택하기
+(defun my/org-roam-project-finalize-hook ()
+  "Adds the captured project file to `org-agenda-files' if the
+capture was not aborted."
+  ;; Remove the hook since it was added temporarily
+  (remove-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
+
+  ;; Add project file to the agenda list if the capture was confirmed
+  (unless org-note-abort
+    (with-current-buffer (org-capture-get :buffer)
+      (add-to-list 'org-agenda-files (buffer-file-name)))))
+
+(defun my/org-roam-find-project ()
+  (interactive)
+  ;; Add the project file to the agenda after capture is finished
+  (add-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
+
+  ;; Select a project file to open, creating it if necessary
+  (org-roam-node-find
+   nil
+   nil
+   (my/org-roam-filter-by-tag "Project")
+   :templates
+   '(("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+category: ${title}\n#+filetags: Project")
+      :unnarrowed t))))
+
+;;지금 쓰는것과 상관없는거 떠오를때 inbox.org에 임시저장하기 위한것
+(defun my/org-roam-capture-inbox ()
+  (interactive)
+  (org-roam-capture- :node (org-roam-node-create)
+                     :templates '(("i" "inbox" plain "* %?"
+                                  :if-new (file+head "Inbox.org" "#+title: Inbox\n")))))
+
+
+;capture a task directly into a specific project
+(defun my/org-roam-capture-task ()
+  (interactive)
+  ;; Add the project file to the agenda after capture is finished
+  (add-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
+
+  ;; Capture the new task, creating the project file if necessary
+  (org-roam-capture- :node (org-roam-node-read
+                            nil
+                            (my/org-roam-filter-by-tag "Project"))
+                     :templates '(("p" "project" plain "* TODO %?"
+                                   :if-new (file+head+olp "%<%Y%m%d%H%M%S>-${slug}.org"
+                                                          "#+title: ${title}\n#+category: ${title}\n#+filetags: Project"
+                                                          ("Tasks"))))))
+(defun my/org-roam-copy-todo-to-today ()
+  (interactive)
+  (let ((org-refile-keep t) ;; Set this to nil to delete the original!
+        (org-roam-dailies-capture-templates
+          '(("t" "tasks" entry "%?"
+             :if-new (file+head+olp "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n" ("Tasks")))))
+        (org-after-refile-insert-hook #'save-buffer)
+        today-file
+        pos)
+    (save-window-excursion
+      (org-roam-dailies--capture (current-time) t)
+      (setq today-file (buffer-file-name))
+      (setq pos (point)))
+
+    ;; Only refile if the target file is different than the current file
+    (unless (equal (file-truename today-file)
+                   (file-truename (buffer-file-name)))
+      (org-refile nil nil (list "Tasks" today-file nil pos)))))
+
+(add-to-list 'org-after-todo-state-change-hook
+             (lambda ()
+               (when (equal org-state "DONE")
+                 (my/org-roam-copy-todo-to-today)))) 
+(global-set-key (kbd "C-c n t") #'my/org-roam-capture-task)
+(global-set-key (kbd "C-c n T") #'my/org-roam-capture-inbox)
+(global-set-key (kbd "C-c n p") #'my/org-roam-find-project)
 
 (if (eq system-type 'darwin)
 (use-package vterm

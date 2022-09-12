@@ -1,0 +1,8 @@
+# -*- mode: snippet -*-
+# name: code-emacs
+# key: <code-emacs
+# --
+
+#+BEGIN_SRC ${1:emacs-lisp}
+$0
+#+END_SRC
