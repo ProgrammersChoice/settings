@@ -356,7 +356,7 @@
 
 (use-package python-mode
   :ensure nil
-  :hook (python-mode . lsp-deferred) ;python mode켤때 lsp모드 켬
+  ;:hook (python-mode . lsp-deferred) ;python mode켤때 lsp모드 켬
   :custom
   (python-shell-interpreter "python3")
   (dap-python-excutable "python3")
@@ -364,6 +364,12 @@
   :config
   (require 'dap-python)
 )
+;lsp mode to pyright
+(use-package lsp-pyright
+:ensure t
+:hook (python-mode . (lambda ()
+                        (require 'lsp-pyright)
+                        (lsp))))
 
 (use-package pyvenv
 :config
@@ -508,7 +514,7 @@
 
 (if (eq system-type 'darwin)
     (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-      '("~/.emacs.d/README.org"
+      '("~/Notes/agenda.org"
         "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
 (setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
 
@@ -663,6 +669,46 @@
 
 ;(+ 55 100)
 
+;;코드블락을 지원하기 위해 htmlize를 설치
+(require 'package)
+(setq package-user-dir (expand-file-name "./.packages"))
+(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                         ("elpa" . "https://elpa.gnu.org/packages/")))
+(package-initialize)
+(unless package-archive-contents
+  (package-refresh-contents))
+(package-install 'htmlize)
+
+;;여기서 시작
+(require 'ox-publish)
+
+(setq org-html-validation-link nil ;;html마지막에 validate뜨는거 막기
+      org-html-head-include-scripts nil ;;use our own scripts
+      org-html-head-include-default-style nil ;;use our own styles
+      org-html-head "<link rel=\"stylesheet\" href=\"https://cdn.simplecss.org/simple.min.css\" />")
+
+
+;;define the publishing project list가 두개인건 첫번재는 전체 프로젝트 그룹, 두번째는 그중 하나 프로젝트
+(setq org-publish-project-alist
+      (list
+       (list "my-org-site"
+             :recursive t ;;sub folder들도 찾아보게함
+             :base-directory "./content"
+             :publishing-directory "./pubilsh"
+             :publishing-function 'org-html-publish-to-html
+	         :with-author nil    ;; don't include author name
+	         :with-creator nil     ;; include Emacs and Org versions in folder
+	         :with-toc nil         ;; include a table of contents
+	         :section-numbers nil ;; Don't include section number
+	         :time-stamp-file nil ;; Don't include time stamp in file
+	   )))
+;; Generate the site output
+(org-publish-all t) ;;t는 캐시파일쓰지말고 다시 생성하라는 뜻임
+(message "Build complete")
+
+(use-package simple-httpd
+  :ensure t)
+
 (use-package org-roam
   :ensure t
   :init
@@ -685,7 +731,7 @@
      ))
   (org-roam-dailies-capture-templates
    '(("d" "default" entry "* %?  =%<<%I:%M %p>>=\n"
-      :if-new (file+head "%<%Y-%m-%d>.org" "#+title: <%Y-%m-%d>\n"))))
+      :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
   :bind (("C-c n b" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
          ("C-c n i" . org-roam-node-insert)
@@ -817,6 +863,7 @@ capture was not aborted."
 (global-set-key (kbd "C-c n t") #'my/org-roam-capture-task)
 (global-set-key (kbd "C-c n T") #'my/org-roam-capture-inbox)
 (global-set-key (kbd "C-c n p") #'my/org-roam-find-project)
+(setq org-clock-sound "~/.emacs.d/isound.wav")
 
 (if (eq system-type 'darwin)
 (use-package vterm

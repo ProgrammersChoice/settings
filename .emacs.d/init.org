@@ -80,6 +80,8 @@ LANG=ko_KR.UTF8 nabi &
 |----------------------+----------------------------|
 | Symbol rename        | M-s . -> C-M-% -> !        |
 |----------------------+----------------------------|
+| timer                | C-c C-x ;                  |
+|----------------------+----------------------------|
   rename-file
   M-x check-parens : init.el디버깅 괄호 틀린지
   describe-bindings =C-h b=
@@ -618,7 +620,7 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
 #+begin_src emacs-lisp
   (use-package python-mode
     :ensure nil
-    :hook (python-mode . lsp-deferred) ;python mode켤때 lsp모드 켬
+    ;:hook (python-mode . lsp-deferred) ;python mode켤때 lsp모드 켬
     :custom
     (python-shell-interpreter "python3")
     (dap-python-excutable "python3")
@@ -626,7 +628,12 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
     :config
     (require 'dap-python)
   )
-  
+  ;lsp mode to pyright
+  (use-package lsp-pyright
+  :ensure t
+  :hook (python-mode . (lambda ()
+                          (require 'lsp-pyright)
+                          (lsp))))
 #+end_src
 
 #+RESULTS:
@@ -729,6 +736,7 @@ Commands:
   =M-x eshell=
 #+begin_src shell
   pip install 'python-lsp-server[all]'
+  pip install 'pyright'
   pip install 'pytest'
   pip install 'debugpy'
 #+end_src
@@ -1106,7 +1114,7 @@ Variables:
 
   (if (eq system-type 'darwin)
       (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-        '("~/.emacs.d/README.org"
+        '("~/Notes/agenda.org"
           "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
   (setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
   
@@ -1364,6 +1372,73 @@ Variables:
 #+RESULTS:
 : 155
 
+** Org Mode website
+- build-site.el
+- org에 기본적으로 내제된 ox-publish를 임포트 후, 메시지 만들기
+- M-x describie-va.. 한담에 org-publish-project-alist검색하면 프로젝트 설정하는 설명 나옴
+  : org-html하면 많이 나옴
+- content라는 폴더에 index.org 파일을 두면 해당 파일이 기본이 됨
+- www.simplecss.org 등 참고
+- C-c C-l Org-insert-link로 링크 만들기 ./emacs.org
+#+BEGIN_SRC emacs-lisp
+  ;;코드블락을 지원하기 위해 htmlize를 설치
+  (require 'package)
+  (setq package-user-dir (expand-file-name "./.packages"))
+  (setq package-archives '(("melpa" . "https://melpa.org/packages/")
+                           ("elpa" . "https://elpa.gnu.org/packages/")))
+  (package-initialize)
+  (unless package-archive-contents
+    (package-refresh-contents))
+  (package-install 'htmlize)
+
+  ;;여기서 시작
+  (require 'ox-publish)
+
+  (setq org-html-validation-link nil ;;html마지막에 validate뜨는거 막기
+        org-html-head-include-scripts nil ;;use our own scripts
+        org-html-head-include-default-style nil ;;use our own styles
+        org-html-head "<link rel=\"stylesheet\" href=\"https://cdn.simplecss.org/simple.min.css\" />")
+
+
+  ;;define the publishing project list가 두개인건 첫번재는 전체 프로젝트 그룹, 두번째는 그중 하나 프로젝트
+  (setq org-publish-project-alist
+        (list
+         (list "my-org-site"
+               :recursive t ;;sub folder들도 찾아보게함
+               :base-directory "./content"
+               :publishing-directory "./pubilsh"
+               :publishing-function 'org-html-publish-to-html
+	           :with-author nil    ;; don't include author name
+	           :with-creator nil     ;; include Emacs and Org versions in folder
+	           :with-toc nil         ;; include a table of contents
+	           :section-numbers nil ;; Don't include section number
+	           :time-stamp-file nil ;; Don't include time stamp in file
+	     )))
+  ;; Generate the site output
+  (org-publish-all t) ;;t는 캐시파일쓰지말고 다시 생성하라는 뜻임
+  (message "Build complete")
+#+END_SRC
+
+- build.sh
+- emacs lisp 스크립트를 돌릴 쉘파일 필요함
+- -Q 를 넣어야 기본 컨피그를 로드하지 않음
+- chmod +x build.sh
+#+BEGIN_SRC sh
+  #!/bin/sh
+  emacs -Q --script build-site.el
+#+END_SRC
+
+- website를 호스트해서 브라우저에서 볼수있게 해줌
+- M-x httpd-serve-directory 명령으로 사이트 띄우자
+- 기본적으로 8080폴더를 쓰니 변화를 필요로하면 httpd-port변수를 셋하면 됨
+#+BEGIN_SRC emacs-lisp
+  (use-package simple-httpd
+    :ensure t)
+
+#+END_SRC
+
+
+
 
 ** Org Roam
 *** install
@@ -1395,7 +1470,7 @@ Variables:
        ))
     (org-roam-dailies-capture-templates
      '(("d" "default" entry "* %?  =%<<%I:%M %p>>=\n"
-        :if-new (file+head "%<%Y-%m-%d>.org" "#+title: <%Y-%m-%d>\n"))))
+        :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
     :bind (("C-c n b" . org-roam-buffer-toggle)
            ("C-c n f" . org-roam-node-find)
            ("C-c n i" . org-roam-node-insert)
@@ -1414,9 +1489,9 @@ Variables:
     (require 'org-roam-dailies)
     (org-roam-setup)
     (org-roam-db-autosync-mode))
-  
+
   ;(setq org-roam-dailies-directory "journal/") ;daily가 아닌 폴더를 하위폴더로 쓸 경우 지정필요
-  
+
   ;;필요한 함수 셋업
   (defun org-roam-node-insert-immediate (arg &rest args)
     (interactive "P")
@@ -1424,25 +1499,25 @@ Variables:
           (org-roam-capture-templates (list (append (car org-roam-capture-templates)
                                                     '(:immediate-finish t)))))
       (apply #'org-roam-node-insert args)))
-  
+
   (defun my/org-roam-filter-by-tag (tag-name)
     (lambda (node)
       (member tag-name (org-roam-node-tags node))))
-  
+
   ;org-roam-node-list가 없어서 주석처리
   (defun my/org-roam-list-notes-by-tag (tag-name)
     (mapcar #'org-roam-node-file
             (seq-filter
              (my/org-roam-filter-by-tag tag-name)
              (org-roam-node-list))))
-  
+
   (defun my/org-roam-refresh-agenda-list ()
     (interactive)
     (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
-  
+
   ;; Build the agenda list the first time for the session
   (my/org-roam-refresh-agenda-list)
-  
+
   ;; Bind this to C-c n I ; 첫 캡처템플릿으로 만들기만하고 현 buffer에 머무르기
   (defun org-roam-node-insert-immediate (arg &rest args)
     (interactive "P")
@@ -1450,25 +1525,25 @@ Variables:
           (org-roam-capture-templates (list (append (car org-roam-capture-templates)
                                                     '(:immediate-finish t)))))
       (apply #'org-roam-node-insert args)))
-  
-  
+
+
   ;; 특정 tag의 note list를 선택하기
   (defun my/org-roam-project-finalize-hook ()
     "Adds the captured project file to `org-agenda-files' if the
   capture was not aborted."
     ;; Remove the hook since it was added temporarily
     (remove-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
-  
+
     ;; Add project file to the agenda list if the capture was confirmed
     (unless org-note-abort
       (with-current-buffer (org-capture-get :buffer)
         (add-to-list 'org-agenda-files (buffer-file-name)))))
-  
+
   (defun my/org-roam-find-project ()
     (interactive)
     ;; Add the project file to the agenda after capture is finished
     (add-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
-  
+
     ;; Select a project file to open, creating it if necessary
     (org-roam-node-find
      nil
@@ -1478,21 +1553,21 @@ Variables:
      '(("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
         :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+category: ${title}\n#+filetags: Project")
         :unnarrowed t))))
-  
+
   ;;지금 쓰는것과 상관없는거 떠오를때 inbox.org에 임시저장하기 위한것
   (defun my/org-roam-capture-inbox ()
     (interactive)
     (org-roam-capture- :node (org-roam-node-create)
                        :templates '(("i" "inbox" plain "* %?"
                                     :if-new (file+head "Inbox.org" "#+title: Inbox\n")))))
-  
-  
+
+
   ;capture a task directly into a specific project
   (defun my/org-roam-capture-task ()
     (interactive)
     ;; Add the project file to the agenda after capture is finished
     (add-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
-  
+
     ;; Capture the new task, creating the project file if necessary
     (org-roam-capture- :node (org-roam-node-read
                               nil
@@ -1514,12 +1589,12 @@ Variables:
         (org-roam-dailies--capture (current-time) t)
         (setq today-file (buffer-file-name))
         (setq pos (point)))
-  
+
       ;; Only refile if the target file is different than the current file
       (unless (equal (file-truename today-file)
                      (file-truename (buffer-file-name)))
         (org-refile nil nil (list "Tasks" today-file nil pos)))))
-  
+
   (add-to-list 'org-after-todo-state-change-hook
                (lambda ()
                  (when (equal org-state "DONE")
@@ -1527,6 +1602,8 @@ Variables:
   (global-set-key (kbd "C-c n t") #'my/org-roam-capture-task)
   (global-set-key (kbd "C-c n T") #'my/org-roam-capture-inbox)
   (global-set-key (kbd "C-c n p") #'my/org-roam-find-project)
+  (setq org-clock-sound "~/.emacs.d/isound.wav")
+
 #+END_SRC
 
 *** usage
