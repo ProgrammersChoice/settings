@@ -146,7 +146,7 @@
   :init (which-key-mode)
   :diminish which-key-mode
   :config
-  (setq which-key-idle-delay 0.1))
+  (setq which-key-idle-delay 0.5))
 
 (use-package helpful
   :custom
@@ -374,8 +374,8 @@
 
 ;Feel free to throuw your wown personal keybindings here
 ;(map! :leader :desc "Blacken Buffer" "m b b" #'python-black-buffer)
-;(map! :leader :desc "Blacken Region" "m b b" #'python-black-region)
-;(map! :leader :desc "Blacken Statement" "m b b" #'python-black-statement)
+;(map! :leader :desc "Blacken Region" "m b r" #'python-black-region)
+;(map! :leader :desc "Blacken Statement" "m b s" #'python-black-statement)
 (use-package python-black
   :ensure t
   :after python
@@ -411,7 +411,7 @@
   :hook (lsp-mode . efs/lsp-mode-setup)
   :init
   (setq lsp-keymap-prefix "C-c l")
-  (setq lsp-idle-delay 0.1)
+  (setq lsp-idle-delay 0.3)
   :config
   (lsp-enable-which-key-integration t))
 
@@ -432,7 +432,7 @@
          ("<tab>" . company-indent-or-complete-common))
   :custom
   (company-minimum-prefix-length 1)
-  (company-idle-delay 0.0))
+  (company-idle-delay 0.5))
 
 (use-package company-box
   :hook (company-mode . company-box-mode))
@@ -444,6 +444,7 @@
 
 (use-package lsp-treemacs
   :after lsp)
+(use-package treemacs-projectile)
 
 (use-package lsp-ivy)
 
@@ -489,10 +490,10 @@
 (require 'vdiff)
 (define-key magit-mode-map "e" 'vdiff-magit-dwim)
 (define-key magit-mode-map "E" 'vdiff-magit)
-(transient-suffix-put 'magit-dispatch "e" : description "vdiff (dwim)")
-(transient-suffix-put 'magit-dispatch "e" : command 'vdiff-magit-dwim)
-(transient-suffix-put 'magit-dispatch "E" : description "vdiff")
-(transient-suffix-put 'magit-dispatch "E" : command 'vdiff-magit)
+(transient-suffix-put 'magit-dispatch "e" :description "vdiff (dwim)")
+(transient-suffix-put 'magit-dispatch "e" :command 'vdiff-magit-dwim)
+(transient-suffix-put 'magit-dispatch "E" :description "vdiff")
+(transient-suffix-put 'magit-dispatch "E" :command 'vdiff-magit)
 
 ;; -*- mode: emacs-lisp; tab-width: 8; -*-
 
@@ -540,7 +541,8 @@
 
 (if (eq system-type 'darwin)
     (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-      '("~/Notes/agenda.org"
+      '("~/Notes/agenda.org" ;macos
+        "~/.emacs.d/README.org" ;linux
         "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
 (setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
 
@@ -614,7 +616,8 @@
 ;org-capture-templates
 (setq org-capture-templates
   `(("t" "Tasks / Projects")
-    ("tt" "Task" entry (file+olp "~/workspace/org/tasks.org" "Inbox")
+    ;("tt" "Task" entry (file+olp "~/workspace/org/tasks.org" "Inbox") ; macos
+    ("tt" "Task" entry (file+olp "~/.emacs.d/README.org" "Inbox") ;linux
          "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
 
     ("j" "Journal Entries")
@@ -816,8 +819,7 @@
 
 ;; 특정 tag의 note list를 선택하기
 (defun my/org-roam-project-finalize-hook ()
-  "Adds the captured project file to `org-agenda-files' if the
-capture was not aborted."
+  ;"Adds the captured project file to `org-agenda-files' if the capture was not aborted."
   ;; Remove the hook since it was added temporarily
   (remove-hook 'org-capture-after-finalize-hook #'my/org-roam-project-finalize-hook)
 
@@ -949,3 +951,6 @@ capture was not aborted."
 
 ;emacs --daemon=worker
 ;emacsclient -f worker -u -e "(org-babel-tangle-file \"~/.emacs.d/Emacs.org\")"
+
+(use-package json-mode
+  :ensure t)
