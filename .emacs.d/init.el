@@ -14,7 +14,8 @@
  (setq ring-bell-function 'ignore)
 
  ;; adjust font size 
- (defvar efs/default-font-size 180)
+ (defvar efs/default-font-size 180) ; macos
+ ;(defvar efs/default-font-size 135) ;gumi linux
 
  ;; set frame transparency
  (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
@@ -371,6 +372,15 @@
                         (require 'lsp-pyright)
                         (lsp))))
 
+;Feel free to throuw your wown personal keybindings here
+;(map! :leader :desc "Blacken Buffer" "m b b" #'python-black-buffer)
+;(map! :leader :desc "Blacken Region" "m b b" #'python-black-region)
+;(map! :leader :desc "Blacken Statement" "m b b" #'python-black-statement)
+(use-package python-black
+  :ensure t
+  :after python
+  :hook (python-mode . python-black-on-save-mode-enable-dwim))
+
 (use-package pyvenv
 :config
 (pyvenv-mode 1))
@@ -380,6 +390,11 @@
   :hook (typescript-mode . lsp-deferred)
   :config
   (setq typescript-indent-level 2))
+
+(use-package traad)
+(setq traad-environment-name "traad3")
+(setq venv-location "/home/hongiee/python3env/")
+;(traad-install-server)
 
 (use-package yasnippet
   :ensure t
@@ -467,6 +482,17 @@
 
 (use-package magit
   :ensure t)
+
+(use-package vdiff-magit
+  :ensure t)
+(require 'vdiff-magit)
+(require 'vdiff)
+(define-key magit-mode-map "e" 'vdiff-magit-dwim)
+(define-key magit-mode-map "E" 'vdiff-magit)
+(transient-suffix-put 'magit-dispatch "e" : description "vdiff (dwim)")
+(transient-suffix-put 'magit-dispatch "e" : command 'vdiff-magit-dwim)
+(transient-suffix-put 'magit-dispatch "E" : description "vdiff")
+(transient-suffix-put 'magit-dispatch "E" : command 'vdiff-magit)
 
 ;; -*- mode: emacs-lisp; tab-width: 8; -*-
 
@@ -876,6 +902,7 @@ capture was not aborted."
   :load-path "~/.emacs.d/emacs-libvterm"
   :config
   (setq vterm-max-scrollback 10000)))
+(add-hook 'vterm-mode-hook 'evil-emacs-state)
 
 (defun efs/configure-eshell()
   ;;save command history

@@ -80,6 +80,8 @@ LANG=ko_KR.UTF8 nabi &
 |----------------------+----------------------------|
 | Symbol rename        | M-s . -> C-M-% -> !        |
 |----------------------+----------------------------|
+| Evil-emacs-state     | C-z                        |
+|----------------------+----------------------------|
 | timer                | C-c C-x ;                  |
 |----------------------+----------------------------|
   rename-file
@@ -147,7 +149,8 @@ LANG=ko_KR.UTF8 nabi &
   (setq ring-bell-function 'ignore)
  
   ;; adjust font size 
-  (defvar efs/default-font-size 180)
+  (defvar efs/default-font-size 180) ; macos
+  ;(defvar efs/default-font-size 135) ;gumi linux
  
   ;; set frame transparency
   (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
@@ -443,7 +446,7 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
   - =dired-listing-switches:= try =-agho --group-directories-first= 디렉토리 후 파일 보이게 하는것
   - dired single : dired buffer를 하나로 관리  
   - 특정 확장자를 emacs가 아닌 다른 프로그램으로 열어서 exwm이 열게도 가능\
-  - mupdf 관련세팅 https://www.romanzolatarev.com/xdg-mime.html
+  - mupdf 관련세팅 https://www.romanzolatarev.com/xdg-mime.html
 
 #+begin_src emacs-lisp
   ;mac built in ls does not support group-directories-first
@@ -558,6 +561,8 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
 - 모든 프로젝타일 키를 =C-c p= 로 트리거하겠다
 - =C-c p f= 이후 =M-o= 하면 메뉴가 많아지는데 스크롤 방법을 모름.
 - counsel-projectil-rg =C-c p s r=
+- projectile-discover-projects-in-search-path
+- setq projectile-discover-projects-in-search-path '("~/workspace" "/media/test"))
 
 
 #+begin_src emacs-lisp
@@ -611,6 +616,7 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
 - python실행이 python3을 쓰게 함
 - hook 으로 python-mode에 들어오면 lsp mode사용하게 함
 - C-c p P : pytest -s -v -k test_function_name
+- C-c p P : cd utopia_preprocess&pytest -s -v -k test_function_name
   -s : print문 보이게 함
   -v : 더 디테일한 정보
   -k : test_뒤에 있는 이름 기반으로 테스트
@@ -634,6 +640,16 @@ http://www.gnu.org/software/emacs/manual/html_node/emacs/Auto-Save-Files.html#Au
   :hook (python-mode . (lambda ()
                           (require 'lsp-pyright)
                           (lsp))))
+
+  ;Feel free to throuw your wown personal keybindings here
+  ;(map! :leader :desc "Blacken Buffer" "m b b" #'python-black-buffer)
+  ;(map! :leader :desc "Blacken Region" "m b b" #'python-black-region)
+  ;(map! :leader :desc "Blacken Statement" "m b b" #'python-black-statement)
+  (use-package python-black
+    :ensure t
+    :after python
+    :hook (python-mode . python-black-on-save-mode-enable-dwim))
+
 #+end_src
 
 #+RESULTS:
@@ -667,6 +683,15 @@ Commands:
   :hook (typescript-mode . lsp-deferred)
   :config
   (setq typescript-indent-level 2))
+#+end_src
+
+*** Rope
+- traad3 is a python refactoring server
+#+begin_src emacs-lisp
+  (use-package traad)
+  (setq traad-environment-name "traad3")
+  (setq venv-location "/home/hongiee/python3env/")
+  ;(traad-install-server)
 #+end_src
 
 ** lsp-mode
@@ -917,6 +942,11 @@ npm i -g typescript-language-server; npm i -g typescript
 - dap-debug 실행할때 vscode debug config도 동작함
 
 ** magit
+- git checkout -t origin/저장소 (원격 저장소 브랜치를 내 로컬에 생성 후 땡길시)
+- git checkout -b 내저장소이름 원격저장소이름(새로운 브랜치명으로 땡길때)
+- M-x magit-clone 하고 주소 gl:users/reponame 하고 경로
+- M-x magit-clone 하고 주소 gl:users/reponame 하고 경로
+- M-x magit-clone 하고 주소 gl:users/reponame 하고 경로
 - M-x magit-clone 하고 주소 gl:users/reponame 하고 경로
 - M-x magit-submodule-add
 - C-x g -> magit-status로 바인딩 되어 있음
@@ -961,12 +991,28 @@ npm i -g typescript-language-server; npm i -g typescript
     i - t : untrack에 있는 파일 .gitignore에 추가할때
     i - s : untrack에 있는 파일 subdirectory .gitignore에 추가할때
     i - p : untrack에 있는 파일 .git/info/exclude 에 추가할때 (private한 gitignore)
+  - rebase관련
+    r - i rebase로 M-k M-j로 이동 spin-off로 합치기 squash로 합치기 등 가능 d는 지우기
 
 #+begin_src emacs-lisp
   (use-package magit
     :ensure t)
 #+end_src
 
+- https://github.com/justbur/emacs-vdiff-magit
+  
+#+begin_src emacs-lisp
+  (use-package vdiff-magit
+    :ensure t)
+  (require 'vdiff-magit)
+  (require 'vdiff)
+  (define-key magit-mode-map "e" 'vdiff-magit-dwim)
+  (define-key magit-mode-map "E" 'vdiff-magit)
+  (transient-suffix-put 'magit-dispatch "e" : description "vdiff (dwim)")
+  (transient-suffix-put 'magit-dispatch "e" : command 'vdiff-magit-dwim)
+  (transient-suffix-put 'magit-dispatch "E" : description "vdiff")
+  (transient-suffix-put 'magit-dispatch "E" : command 'vdiff-magit)
+#+end_src
 
 * File/Dir Local Valiables
 Run =M-x normal-mode= to active
@@ -1644,6 +1690,7 @@ Variables:
     :load-path "~/.emacs.d/emacs-libvterm"
     :config
     (setq vterm-max-scrollback 10000)))
+  (add-hook 'vterm-mode-hook 'evil-emacs-state)
 #+end_src
 ** eshell
 #+begin_src emacs-lisp
