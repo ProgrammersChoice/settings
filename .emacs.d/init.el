@@ -14,8 +14,10 @@
  (setq ring-bell-function 'ignore)
 
  ;; adjust font size 
- (defvar efs/default-font-size 180) ; macos
- ;(defvar efs/default-font-size 135) ;gumi linux
+ (if (eq system-type 'darwin)
+   (defvar efs/default-font-size 180)) ; macos
+ (if (eq system-type 'gnu/linux)
+   (defvar efs/default-font-size 135)) ;gumi linux
 
  ;; set frame transparency
  (set-frame-parameter (selected-frame) 'alpha '(90 . 90))
@@ -23,11 +25,18 @@
  (set-frame-parameter (selected-frame) 'fullscreen 'maximized)
  (add-to-list 'default-frame-alist '(fullscreen . maximized))
  (if (eq system-type 'darwin)
-     (setenv "LIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/11:/opt/homebrew/opt/libgccjit/lib/gcc/11:/opt/homebrew/opt/gcc/lib/gcc/11/gc\
-/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
+     (setenv "LIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/12:/opt/homebrew/opt/libgccjit/lib/gcc/12:/opt/homebrew/opt/gcc/lib/gcc/12/gc\
+/aarch64-apple-darwin21/12:/Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/lib"))
  (if (eq system-type 'darwin)
-     (setenv "LD_lIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/11:/opt/homebrew/opt/libgccjit/lib/gcc/11:/opt/homebrew/opt/gcc/lib/gcc/11/gc\
-/aarch64-apple-darwin21/11:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib"))
+     (setenv "LD_lIBRARY_PATH" "/opt/homebrew/opt/gcc/lib/gcc/12:/opt/homebrew/opt/libgccjit/lib/gcc/12:/opt/homebrew/opt/gcc/lib/gcc/12/gc\
+/aarch64-apple-darwin21/12:/Library/Developer/CommandLineTools/SDKs/MacOSX12.1.sdk/usr/lib"))
+;c모드에서만 아래 실행하도록 수정 필요
+ (if (eq system-type 'darwin)
+     (setenv "PYTHONPATH" "/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7"))
+ (if (eq system-type 'darwin)
+     (setenv "PYTHONHOME" "/Library/Frameworks/Python.framework/Versions/2.7"))
+ (if (eq system-type 'darwin)
+     (setenv "PATH" "/Library/Frameworks/Python.framework/Versions/2.7:$PATH"))
  (if (eq system-type 'darwin)
       (add-to-list 'exec-path "/opt/homebrew/bin"))
 
@@ -49,7 +58,7 @@
 ;(when dw/is-termux
 ;  (setq gnutls-algorithm-priority "normal:-vers-tls1.3"))
 
-(package-initialize)
+;(package-initialize)
 (unless package-archive-contents
   (package-refresh-contents))
 
@@ -82,9 +91,18 @@
 ;(setq create-lockfiles nil)
 
 (custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(helm-minibuffer-history-key "M-p")
  '(package-selected-packages
-   '(evil-magit magit ag rg ripgrep hydra evil-collection undo-tree evil general all-the-icons-dired doom-modeline marginalia vertico command-log-mode use-package)))
+   '(htmlize lsp-mode yasnippet lsp-treemacs helm-lsp projectile hydra flycheck company avy which-key helm-xref dap-mode)))
 (custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
  )
 
 (defun efs/set-font-faces ()
@@ -120,10 +138,8 @@
                 conf-mode-hook))
   (add-hook mode (lambda () (display-line-numbers-mode 1))))
 
-(use-package doom-modeline)
-(doom-modeline-mode 1)
-
 (use-package all-the-icons
+  :ensure t
   :if (display-graphic-p)
   :commands all-the-icons-install-fonts
   :init
@@ -136,10 +152,12 @@
   :init (doom-modeline-mode 1)
   :custom (doom-modeline-height 15))
 
-(use-package doom-themes)
+(use-package doom-themes
+  :ensure t)
 (load-theme 'doom-gruvbox 1)
 
 (use-package  rainbow-delimiters
+  :ensure t
   :hook (prog-mode . rainbow-delimiters-mode))
 
 (use-package  which-key
@@ -178,6 +196,7 @@
 
 (use-package evil
   ;; Pre-load configuration
+  :ensure t
   :init
   (setq evil-want-integration t)
   (setq evil-want-keybinding nil)
@@ -314,10 +333,12 @@
   (vertico-mode))
 
 (use-package savehist
+  :ensure t
   :init
   (savehist-mode))
 
 (use-package marginalia
+  :ensure t
   :after vertico
   :custom
   (marginalia-annotators '(marginalia-annotators-heavy marginalia-annotators-light nil))
@@ -382,8 +403,9 @@
   :hook (python-mode . python-black-on-save-mode-enable-dwim))
 
 (use-package pyvenv
-:config
-(pyvenv-mode 1))
+  :ensure t
+  :config
+  (pyvenv-mode t))
 
 (use-package typescript-mode
   :mode "\\.ts\\'"
@@ -391,7 +413,8 @@
   :config
   (setq typescript-indent-level 2))
 
-(use-package traad)
+(use-package traad
+  :ensure t)
 (setq traad-environment-name "traad3")
 (setq venv-location "/home/hongiee/python3env/")
 ;(traad-install-server)
@@ -423,7 +446,35 @@
 ;  :ensure t
 ;  :init (global-flycheck-mode))
 
+(setq package-selected-packages '(lsp-mode yasnippet lsp-treemacs helm-lsp
+    projectile hydra flycheck company avy which-key helm-xref dap-mode))
+
+(when (cl-find-if-not #'package-installed-p package-selected-packages)
+  (package-refresh-contents)
+  (mapc #'package-install package-selected-packages))
+(helm-mode)
+(require 'helm-xref)
+;(define-key global-map [remap find-file] #'helm-find-files)
+(define-key global-map [remap execute-extended-command] #'helm-M-x)
+(define-key global-map [remap switch-to-buffer] #'helm-mini)
+(which-key-mode)
+(add-hook 'c-mode-hook 'lsp)
+(add-hook 'c++-mode-hook 'lsp)
+
+(setq gc-cons-threshold (* 100 1024 1024)
+      read-process-output-max (* 1024 1024)
+      treemacs-space-between-root-nodes nil
+      company-idle-delay 0.1
+      company-minimum-prefix-length 1
+      lsp-idle-delay 0.3)  ;; clangd is fast
+
+(with-eval-after-load 'lsp-mode
+  (add-hook 'lsp-mode-hook #'lsp-enable-which-key-integration)
+  (require 'dap-cpptools)
+  (yas-global-mode))
+
 (use-package company
+  :ensure t
   :after lsp-mode
   :hook (lsp-mode . company-mode)
   :bind (:map company-active-map
@@ -442,21 +493,84 @@
 ;:custom
 ;(lsp-ui-doc-position 'bottom))
 
-(use-package lsp-treemacs
-  :after lsp)
-(use-package treemacs-projectile)
+(use-package lsp-ivy
+  :ensure t
+)
 
-(use-package lsp-ivy)
+;(use-package dap-mode
+ ;  :ensure t
+ ;  ;기존에는 dap-auto-configure-feature변수에 sessions locals breakpoints expressions controls tooltip다보임
+ ;  ;그 중 몇개만 보려면 아래처럼 set
+ ;  ;:custom
+ ;  ;(dap-auto-configure-features '(sessions locals tooltip))
+
+;p  ;breakpoint걸릴때마다 hydra띄우기
+ ;  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+ ;(require 'dap-cpptools)
+ ;(use-package leaf
+ ;  :ensure t)
+ ;(leaf dap-mode
+ ;  :ensure t
+ ;  :init
+ ;  (dap-mode 1)
+ ;  (dap-tooltip-mode 1)
+ ;  (dap-auto-configure-mode 1)
+ ;  (dap-ui-controls-mode 1)
+ ;  :require t dap-lldb
+ ;  :bind
+ ;  (:dap-mode-map
+ ;   ([f5] . dap-debug)
+ ;   ("M-d i" . dap-step-in)
+ ;   ("M-d o" . dap-step-out)
+ ;   ("M-d n" . dap-next)
+ ;   ("M-d g" . dap-continue)
+ ;   ("M-d t" . dap-breakpoint-toggle))
+ ;  :config
+ ;  (leaf dap-ui
+ ;    :ensure nil
+ ;    :require t
+ ;    :config
+ ;    (dap-ui-mode 1))
+ ;  :custom
+ ;  (dap-auto-configure-features . '(sessions locals breakpoints expressions repl controls tooltip))
+ ;  (dap-lldb-debug-program . `(,(expand-file-name "~/.vscode/extensions/lanza.lldb-vscode-0.2.3/bin/darwin/bin/lldb-vscode"))))
 
 (use-package dap-mode
-  :ensure t
-  ;기존에는 dap-auto-configure-feature변수에 sessions locals breakpoints expressions controls tooltip다보임
-  ;그 중 몇개만 보려면 아래처럼 set
-  ;:custom
-  ;(dap-auto-configure-features '(sessions locals tooltip))
+:defer
+:custom
+(dap-auto-configure-mode t                           "Automatically configure dap.")
+(python-shell-interpreter "python2")
+(dap-python-excutable "python2")
 
-  ;breakpoint걸릴때마다 hydra띄우기
-  :hook (dap-stopped . (lambda (arg) (call-interactively #'dap-hydra))))
+;(dap-auto-configure-features
+; '(sessions locals breakpoints expressions tooltip)  "Remove the button panel in the top.")
+:config
+;;; dap for c++
+(require 'dap-lldb)
+
+;;; set the debugger executable (c++)
+;(setq dap-lldb-debug-program '("/User/eddie/lldb-vscode"))
+
+;;; ask user for executable to debug if not specified explicitly (c++)
+(setq dap-lldb-debugged-program-function (lambda () (read-file-name "Select file to debug.")))
+
+;;; default debug template for (c++)
+(dap-register-debug-template
+ "C++ LLDB dap"
+ (list :type "lldb-vscode"
+       :cwd nil
+       :args nil
+       :request "launch"
+       :program nil))
+
+(defun dap-debug-create-or-edit-json-template ()
+  "Edit the C++ debugging configuration or create + edit if none exists yet."
+  (interactive)
+  (let ((filename (concat (lsp-workspace-root) "/launch.json"))
+        (default "~/.emacs.d/default-launch.json"))
+    (unless (file-exists-p filename)
+      (copy-file default filename))
+    (find-file-existing filename))))
 
 ;요거 python-mode에 추가함
 ;(dap-python-debugger 'debugpy)
@@ -529,7 +643,7 @@
         org-hide-emphasis-markers t) ;bold link등 */같은거 안보이게
   (setq org-agenda-start-with-log-mode t)
   (setq org-log-done 'time)
-  (setq org-log-into-drawer t)
+  ;(setq org-log-into-drawer t)
 
   ;todo의 종류들을 추가하는 것으로 |기준으로 active냐 종료상태를 좌우로 나뉨
   (setq org-todo-keywords
@@ -541,7 +655,8 @@
 
 (if (eq system-type 'darwin)
     (setq org-agenda-files ; agenda에서 관리할 파일 리스트로 ""다음줄에 ""또넣어도됨
-      '("~/Notes/agenda.org" ;macos
+      '("/Users/eddie/Library/CloudStorage/GoogleDrive-sehong.kwon@gmail.com/내 드라이브/notes/agenda.org" ;macos
+      ;'("~/Notes/agenda.org" ;macos
         "~/.emacs.d/README.org" ;linux
         "~/workspace/org/tasks.org"))) ; '요거 하나는 뒤에가 리스트라는 의미로 펑션콜이 아님을 의미
 (setq org-startup-with-inline-images t) ; org에서 그림파일 항상 보이게
@@ -613,37 +728,48 @@
 ;  :hook (org-mode . efs/org-mode-visual-fill))
 
 ;org-capture
-;org-capture-templates
-(setq org-capture-templates
-  `(("t" "Tasks / Projects")
-    ;("tt" "Task" entry (file+olp "~/workspace/org/tasks.org" "Inbox") ; macos
-    ("tt" "Task" entry (file+olp "~/.emacs.d/README.org" "Inbox") ;linux
-         "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)
+  ;org-capture-templates
+  (setq org-capture-templates
+     '(("d" "default" plain
+        "%?"
+        :if-new (file+head "pages/%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+        :unnarrowed t)
+       ;("b" "book notes" plain
+       ;   (file "~/.emacs.d/Templates/BookNote.org")
+       ;   :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+       ;   :unnarrowed t)
+       ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
+        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
+        :unnarrowed t)
+       ))
+      ;("tt" "Task" entry (file+olp "~/workspace/org/tasks.org" "Inbox") ; macos
+;      ("tt" "Task" entry (file+olp "~/.emacs.d/README.org" "Inbox") ;linux
+;           "* TODO %?\n  %U\n  %a\n  %i" :empty-lines 1)))
 
-    ("j" "Journal Entries")
-    ("jj" "Journal" entry
-         (file+olp+datetree "~/.emacs.d/README.org")
-         "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
-         ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
-         :clock-in :clock-resume
-         :empty-lines 1)
-    ;("jm" "Meeting" entry
-    ;     (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
-    ;     "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
-    ;     :clock-in :clock-resume
-    ;     :empty-lines 1)
+;      ("j" "Journal Entries")
+;      ("jj" "Journal" entry
+;           (file+olp+datetree "~/.emacs.d/README.org")
+;           "\n* %<%I:%M %p> - Journal :journal:\n\n%?\n\n"
+;           ;; ,(dw/read-file-as-string "~/Notes/Templates/Daily.org")
+;           :clock-in :clock-resume
+;           :empty-lines 1)
+;      ;("jm" "Meeting" entry
+;      ;     (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+;      ;     "* %<%I:%M %p> - %a :meetings:\n\n%?\n\n"
+;      ;     :clock-in :clock-resume
+;      ;     :empty-lines 1)
+;
+;      ;("w" "Workflows")
+;      ;("we" "Checking Email" entry (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
+;      ;     "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
+;
+;      ;("m" "Metrics Capture")
+;      ;("mw" "Weight" table-line (file+headline "~/Projects/Code/emacs-from-scratch/OrgFiles/Metrics.org" "Weight")
+;      ; "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)
+;      ))
 
-    ;("w" "Workflows")
-    ;("we" "Checking Email" entry (file+olp+datetree "~/Projects/Code/emacs-from-scratch/OrgFiles/Journal.org")
-    ;     "* Checking Email :email:\n\n%?" :clock-in :clock-resume :empty-lines 1)
-
-    ;("m" "Metrics Capture")
-    ;("mw" "Weight" table-line (file+headline "~/Projects/Code/emacs-from-scratch/OrgFiles/Metrics.org" "Weight")
-    ; "| %U | %^{Weight} | %^{Notes} |" :kill-buffer t)
-    ))
-
-(define-key global-map (kbd "C-c j")
-  (lambda () (interactive) (org-capture nil "jj")))
+  (define-key global-map (kbd "C-c j")
+    (lambda () (interactive) (org-capture nil "jj")))
 
 (use-package org
 :ensure org-plus-contrib)
@@ -701,9 +827,9 @@
 ;;코드블락을 지원하기 위해 htmlize를 설치
 (require 'package)
 (setq package-user-dir (expand-file-name "./.packages"))
-(setq package-archives '(("melpa" . "https://melpa.org/packages/")
-                         ("elpa" . "https://elpa.gnu.org/packages/")))
-(package-initialize)
+;(setq package-archives '(("melpa" . "https://melpa.org/packages/")
+;                         ("elpa" . "https://elpa.gnu.org/packages/")))
+;(package-initialize)
 (unless package-archive-contents
   (package-refresh-contents))
 (package-install 'htmlize)
@@ -742,18 +868,20 @@
   :ensure t
   :init
   (setq org-roam-v2-ack t) ;roam v1쓸경우 팝업창 뜨는걸 방지
+  (setq org-roam-dailies-directory "journals/") ;daily가 아닌 폴더를 하위폴더로 쓸 경우 지정필요
   :custom
-  (org-roam-directory "~/Notes")
+  (org-roam-directory "/Users/eddie/Library/CloudStorage/GoogleDrive-sehong.kwon@gmail.com/내 드라이브/notes")
+  (org-roam-db-location "/Users/eddie/Library/CloudStorage/GoogleDrive-sehong.kwon@gmail.com/내 드라이브/notes/org-roam.db")
   (org-roam-completion-everywhere t)
   (org-roam-capture-templates
    '(("d" "default" plain
       "%?"
-      :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+      :if-new (file+head "pages/%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
       :unnarrowed t)
-     ("b" "book notes" plain
-        (file "~/.emacs.d/Templates/BookNote.org")
-        :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
-        :unnarrowed t)
+     ;("b" "book notes" plain
+     ;   (file "~/.emacs.d/Templates/BookNote.org")
+     ;   :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n")
+     ;   :unnarrowed t)
      ("p" "project" plain "* Goals\n\n%?\n\n* Tasks\n\n** TODO Add initial tasks\n\n* Dates\n\n"
       :if-new (file+head "%<%Y%m%d%H%M%S>-${slug}.org" "#+title: ${title}\n#+filetags: Project")
       :unnarrowed t)
@@ -761,6 +889,9 @@
   (org-roam-dailies-capture-templates
    '(("d" "default" entry "* %?  =%<<%I:%M %p>>=\n"
       :if-new (file+head "%<%Y-%m-%d>.org" "#+title: %<%Y-%m-%d>\n"))))
+  (if (eq system-type 'gnu/linux)
+    (org-roam-directory "/home/hongiee/Notes")
+    (org-roam-db-location "/home/hongiee/org-roam.db"))
   :bind (("C-c n b" . org-roam-buffer-toggle)
          ("C-c n f" . org-roam-node-find)
          ("C-c n i" . org-roam-node-insert)
@@ -780,33 +911,23 @@
   (org-roam-setup)
   (org-roam-db-autosync-mode))
 
-;(setq org-roam-dailies-directory "journal/") ;daily가 아닌 폴더를 하위폴더로 쓸 경우 지정필요
-
-;;필요한 함수 셋업
-(defun org-roam-node-insert-immediate (arg &rest args)
-  (interactive "P")
-  (let ((args (push arg args))
-        (org-roam-capture-templates (list (append (car org-roam-capture-templates)
-                                                  '(:immediate-finish t)))))
-    (apply #'org-roam-node-insert args)))
-
 (defun my/org-roam-filter-by-tag (tag-name)
   (lambda (node)
     (member tag-name (org-roam-node-tags node))))
 
 ;org-roam-node-list가 없어서 주석처리
-(defun my/org-roam-list-notes-by-tag (tag-name)
-  (mapcar #'org-roam-node-file
-          (seq-filter
-           (my/org-roam-filter-by-tag tag-name)
-           (org-roam-node-list))))
+;(defun my/org-roam-list-notes-by-tag (tag-name)
+;  (mapcar #'org-roam-node-file
+;          (seq-filter
+;           (my/org-roam-filter-by-tag tag-name)
+;           (org-roam-node-list))))
 
-(defun my/org-roam-refresh-agenda-list ()
-  (interactive)
-  (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
+;(defun my/org-roam-refresh-agenda-list ()
+;  (interactive)
+;  (setq org-agenda-files (my/org-roam-list-notes-by-tag "Project")))
 
-;; Build the agenda list the first time for the session
-(my/org-roam-refresh-agenda-list)
+;;; Build the agenda list the first time for the session
+;(my/org-roam-refresh-agenda-list)
 
 ;; Bind this to C-c n I ; 첫 캡처템플릿으로 만들기만하고 현 buffer에 머무르기
 (defun org-roam-node-insert-immediate (arg &rest args)
@@ -891,7 +1012,13 @@
 (global-set-key (kbd "C-c n t") #'my/org-roam-capture-task)
 (global-set-key (kbd "C-c n T") #'my/org-roam-capture-inbox)
 (global-set-key (kbd "C-c n p") #'my/org-roam-find-project)
-(setq org-clock-sound "~/.emacs.d/isound.wav")
+;(defun my-org-timer-hook ()
+;  (message "My timer done")
+;  (if (executable-find "ffplay")
+;      (call-process "ffplay" nil nil nil "-nodisp" "-autoexit" "~/.emacs.d/isound.wav")))
+;(add-hook 'org-timer-done-hook 'my-org-timer-hook)
+(setq org-clock-sound t)
+;(setq org-clock-sound "~/.emacs.d/isound.wav")
 
 (if (eq system-type 'darwin)
 (use-package vterm
